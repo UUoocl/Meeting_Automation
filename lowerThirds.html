@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html class="sl-root decks export offline loaded">
+
+<head>
+	<meta name="viewport"
+		content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover, minimal-ui">
+	<meta charset="utf-8">
+
+	<link rel="manifest" href='data:application/manifest+json,{"display": "standalone", "name": "timerText"}' />
+	<title>Timer App</title>
+
+	<link rel="stylesheet" type="text/css" href="dist/offline-v2.css">
+</head>
+
+<body class="reveal-viewport theme-font-montserrat theme-color-white-blue">
+	<div class="reveal">
+		<div class="slides" id="slides">
+			<section style="top: 350px;" id="placeholder">Loading Slides</section>
+		</div>
+	</div>
+
+	<!-- OBS WebSocket Server -->
+	<script src='lib/obs-ws.js'></script>
+    <script src='js/obsConnect.js'></script>
+	
+	<!-- Reveal Slides -->
+	<script src="dist/reveal.js"></script>
+	<!-- <script src="dist/offline.js"></script> -->
+	
+	<!-- Get Data from Google Sheet -->
+    <script src='js/getSheetsData.js'></script>
+    	
+	<!-- Initialize the presentation -->
+	<script>
+		let tableData;
+
+		Reveal.initialize({
+			width: 1280,
+			height: 720,
+			margin: 0.0,
+			controls: false,
+			transition: "slide",
+			backgroundTransition: "slide",
+			progress: false,
+		});
+		
+		Reveal.on('ready', event => {
+			console.log("reveal ready to run");
+			getSheetData();
+		})
+
+		//called from the script getSheetData.js
+		function loadData(headers, data){
+			createSlides(data);
+			tableData = data;
+		}
+
+		async function createSlides(slidesContent) {
+			document.getElementById('placeholder').remove();
+
+			console.log("load slides", slidesContent)
+			for (let i = 0; i < slidesContent.length; i++) {
+				// 1. Select the parent element
+				const parentElement = document.getElementById('slides');
+
+				// 2. Create the new element
+				const newElement = document.createElement('section');
+
+				// 3. Add content to the new element (optional)
+				newElement.innerHTML = `<section>
+				<div class="sl-block" style="height: auto; width: 80px; left: 40px; top: 1px;">
+					<div class="sl-block-content" style="z-index: 12; text-align: center;">
+						<h2 id="sectionIcon-${i}">🎙️</h2>
+					</div>
+				</div>
+				<div class="sl-block" style="width: 447px; left: 120px; top: 6.5px; height: auto;">
+					<div class="sl-block-content" style="z-index: 11; font-size: 85%; text-align: left; color: rgb(238, 238, 238);">
+						<h2 id="Section-${i}"><strong><span style="font-size:1.0em;">${slidesContent[i].Section}</span></strong></h2>
+					</div>
+				</div>
+				<div class="sl-block" style="height: auto; width: 610px; left: 560px; top: 6.5px;">
+					<div class="sl-block-content" style="z-index: 13; font-size: 85%; color: rgb(238, 238, 238);font-weight: 900;">
+						<h2 id="speaker-${i}" style="text-align:left"><span style="font-size:1.0em">${slidesContent[i].Name}</span>
+						</h2>
+					</div>
+				</div>
+				<div class="sl-block" style="width: 1280px; height: 720px; left: 0px; top: 1px;">
+					<div class="sl-block-content" style="z-index: 10;">
+						<svg xmlns="http://www.w3.org/2000/svg"
+							version="1.1" width="100%" height="100%" preserveaspectratio="none" viewbox="0 0 1280 720">
+							<rect width="1280" height="720" rx="0" ry="0" class="shape-element" fill="#004063"></rect>
+						</svg>
+					</div>
+				</div>
+			</section>
+		`;
+				newElement.id = `slide ${i}`
+				// 4. Append the new element
+				parentElement.appendChild(newElement);
+				Reveal.next()
+			}
+			Reveal.slide(0)
+
+			console.log("slide creation complete")
+		return;
+		}
+
+		async function changeAgendaItem(slideID){
+			//hide
+			disableSource('Meeting Scene', 'Lower Thirds').then(async () =>
+				await setTimeout( () => {
+					Reveal.slide(slideID);
+					//show
+					enableSource('Meeting Scene', 'Lower Thirds');
+				}
+				, 300)		
+			)
+		}
+
+		window.addEventListener(`lowerSectionChange`, function (event) {
+            //section command
+			console.log("message received: ", event)
+			if(event.detail.msg.setSection){
+				console.log(tableData, event.detail.msg.setSection)
+				// console.log(tableData.findIndex( (section) => {
+				// 	return section.Section === event.detail.msg.setSection;
+				// 	})
+				// )
+				const slideNumber = event.detail.msg.setSection;
+				changeAgendaItem(slideNumber);
+			}
+			
+		})
+
+		async function enableSource(sceneName, sourceName) {
+			//Get the Scene Item Id number
+			const sceneItemId = await obs.call("GetSceneItemId",{
+				sceneName: sceneName,
+				sourceName: sourceName,
+			})
+			//Set the 'Next Slide' Source to Enabled    
+			await obs.call("SetSceneItemEnabled", {
+				sceneName: sceneName,
+				sceneItemId: Number(sceneItemId.sceneItemId),
+				sceneItemEnabled: true
+			});
+		}	
+		
+		async function disableSource(sceneName, sourceName) {
+			//Get the Scene Item Id number
+            const sceneItemId = await obs.call("GetSceneItemId",{
+				sceneName: sceneName,
+                sourceName: sourceName,
+            })
+			//Set the 'Next Slide' Source to Enabled    
+            await obs.call("SetSceneItemEnabled", {
+				sceneName: sceneName,
+                sceneItemId: Number(sceneItemId.sceneItemId),
+                sceneItemEnabled: false
+            });
+        }
+    </script>
+</body>
+</html>

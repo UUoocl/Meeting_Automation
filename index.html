@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <title>Meeting Automation Settings</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <link href="css/style.css" rel="stylesheet" type="text/css" />
+</head>
+
+<body>
+    <article class="contents">
+        <h1>Meeting Automation Settings</h1>
+        <h4>Configure OBS launch parameters and Browser source settings</h4>
+
+        <section>
+            <div id="openOBS">
+                <h3>Open OBS</h3>
+                <form class="form-grid" id="obsData">
+                    <label for="configName">Enter a configuration name:</label>
+                    <input type="text" id="configName" name="configName" list="configNameValues"
+                        placeholder="UUinsome" />
+                    <datalist id="configNameValues">
+
+                    </datalist>
+                    <label for="obsName" id="obsNameLabel">Enter OBS app name:</label>
+                    <input type="text" id="obsName" name="obsName" value="OBS" />
+                    <label for="profileName">Enter OBS Profile name:</label>
+                    <input type="text" id="profileName" name="profileName" value="720vc" />
+                    <label for="collectionName">Enter OBS Collection name:</label>
+                    <input type="text" id="collectionName" name="collectionName" value="UUinsome" />
+                    <label for="IP">Enter IP address or "localhost":</label>
+                    <input type="text" id="IP" name="IP" value="localhost" disabled/>
+                    <label for="Port">Enter Port Number:</label>
+                    <input type="text" id="Port" name="Port" value="4455" />
+                    <label for="PW">Enter Password:</label>
+                    <input type="password" id="PW" name="PW" value="" />
+                    <label for="virtualCameraOn">Start Virtual Camera:</label>
+                    <input type="checkbox" id="virtualCameraOn" name="virtualCameraOn" disabled unchecked />
+                    <label for="Debug">Debug mode:</label>
+                    <input type="checkbox" id="Debug" name="Debug" />
+                    <p></p><div id="openOBSbutton">
+                        <input class="form-button" type="button" value="Open OBS" />
+                    </div>
+                </form>
+                
+                <div><button id="copyCommand">Copy Command</button><input type="text" id="obsOpenCommand"/></div>
+            </div>
+        </section>
+        
+        <section>
+            <div id="postURL">
+                <h3>Set Google Sheets web app API key</h3>
+                <form class="form-grid">
+                    <label for="postID">Enter Sheets API ID:</label>
+                    <input type="text" id="postID" name="postID" value="webapp ID" />
+                </form>
+            </div>
+        </section>
+        
+        <section>
+            <div id="srvr">
+                <h3>Connect to the OBS WebSocket Server</h3>
+                <form class="form-grid">
+                    <p></p><input class="form-button" type="button" id="WSconnectButton" value="Connect" />
+                </form>
+            </div>
+        </section>
+
+        <section>
+            <div id="setBrowser">
+                <h3></h3>OBS Browser Sources</h3>
+                <div id="browserSources"></div>
+
+            </div>
+            </div>
+        </section>
+        <section hidden>
+            <div id="collectionDetails">
+                <h3></h3>OBS Collection</h3>
+                <div id="obsCollection"></div>
+            </div>
+            </div>
+        </section>
+        
+        <section hidden>
+            <div id="collectionTabulatorFormat">
+                <h3></h3>OBS Collection Tabulator Format</h3>
+                <div id="obsCollectionTabulator"></div>
+            </div>
+            </div>
+        </section>
+    </article>
+
+    <script src='lib/obs-ws.js'></script>
+    <script src='js/obsConnect.js'></script>
+    <!-- <script src='js/obsCollectionCopy.js'></script> -->
+    <script>
+        let wssDetails, configName;
+        let configMap = new Map();
+
+        document.addEventListener("DOMContentLoaded", (event) => {
+            // on load get stored launch parameters
+            if (localStorage.getItem("configName")) {
+                getLocalStorageConfigOptions();
+                getLocalStorageConfigValue(localStorage.getItem("configName"))
+            }
+
+            //add button event listeners
+            document
+                .getElementById("openOBSbutton")
+                .addEventListener('click', openOBS);
+
+            document
+                .getElementById("WSconnectButton")
+                .addEventListener("click", wsConnect);
+
+            document
+                .getElementById("configName")
+                .addEventListener('input', configSelected);
+
+            document
+                .getElementById("obsData")
+                .addEventListener('change', obsLaunchCommand);
+
+                document
+                .getElementById("copyCommand")
+                .addEventListener('click', (e) => {
+                    console.log(e)
+                    copyCode(e.target.id, "obsOpenCommand", e.target.innerText)});
+
+            obsLaunchCommand();
+        })
+        //button functions            
+        function openOBS() {
+            let uuinsomeHREF = window.location.href;
+            // "path":"${uuinsomeHREF}",
+            let inputArray = JSON.stringify(`{"obsName":"${document.getElementById("obsName").value}","profileName":"${document.getElementById("profileName").value}","collectionName":"${document.getElementById("collectionName").value}","ip":"${document.getElementById("IP").value}","port":"${document.getElementById("Port").value}","password":"${document.getElementById("PW").value}"}`)
+            console.log(inputArray)
+            if (document.getElementById("Debug").checked) {
+                window.open(`shortcuts://run-shortcut?name=INPUT-Open_OBS_Profile-Collection-WebSocket-DEBUG&input=text&text=${inputArray}`, "_self");
+            } else {
+                window.open(`shortcuts://run-shortcut?name=INPUT-Open_OBS_Profile-Collection-WebSocket&input=text&text=${inputArray}`, "_self");
+            }
+        }
+
+        async function wsConnect() {
+            wssDetails = {
+                "IP": document.getElementById("IP").value,
+                "PORT": document.getElementById("Port").value,
+                "PW": document.getElementById("PW").value,
+            };
+
+            document.getElementById("browserSources").innerHTML = "";
+
+            // Saves config data to retrieve later
+            configMap.set(`${document.getElementById("configName").value}`,
+                {
+                    obsName: document.getElementById("obsName").value,
+                    profileName: document.getElementById("profileName").value,
+                    collectionName: document.getElementById("collectionName").value,
+                    IP: wssDetails.IP,
+                    Port: wssDetails.PORT,
+                    obsPW: wssDetails.PW,
+                    debugMode: document.getElementById("Debug").checked,
+                    apiID: document.getElementById("postID").value
+                })
+
+            localStorage.setItem("configName", document.getElementById("configName").value);
+            const str = JSON.stringify(configMap, replacer)
+            localStorage.setItem("configMap", str);
+
+            await connectOBS(wssDetails)
+                .then(async (result) => {
+                    if (result === 'failed') {
+                        document.getElementById("WSconnectButton").style.background = "#ff0000";
+                    }
+                })
+        }
+
+        function getLocalStorageConfigOptions() {
+            //get configurations in local storage
+            configMap = JSON.parse(localStorage.getItem("configMap"), reviver)
+
+            for (const key of configMap.keys()) {
+                const parentElement = document.getElementById("configNameValues");
+                const newElement = document.createElement("option");
+                newElement.textContent = key;
+                parentElement.appendChild(newElement);
+            }
+        }
+
+        function getLocalStorageConfigValue(selectedConfig) {
+            //const config = localStorage.getItem(selectedConfig)
+            //get configurations in local storage
+            configItem = configMap.get(selectedConfig);
+
+            document.getElementById("configName").value = selectedConfig;
+            document.getElementById("obsName").value = configItem?.obsName;
+            document.getElementById("IP").value = configItem?.IP;
+            document.getElementById("Port").value = configItem?.Port;
+            document.getElementById("PW").value = configItem?.obsPW;
+            document.getElementById("profileName").value = configItem?.profileName;
+            document.getElementById("collectionName").value = configItem?.collectionName;
+            document.getElementById("Debug").value = configItem?.debugMode;
+            document.getElementById("postID").value = configItem?.apiID;
+        }
+
+        function configSelected() {
+
+            const selectedValue = this.value;
+            // Perform actions based on the selected value
+
+            // Check if the selected value exists in the datalist options
+            const datalist = document.getElementById(this.getAttribute('list'));
+            let optionFound = false;
+            for (let i = 0; i < datalist.options.length; i++) {
+                if (selectedValue === datalist.options[i].value) {
+                    optionFound = true;
+                    break;
+                }
+            }
+
+            if (optionFound) {
+                console.log("Valid selection from datalist");
+                getLocalStorageConfigValue(selectedValue)
+            } else {
+                console.log("Not a valid selection from datalist");
+                //Actions when the input doesn't match any datalist option
+            }
+        }
+        
+        function obsLaunchCommand(event){
+            console.log(window.navigator.platform)
+            const obsParameters = document.getElementById("obsData")
+            console.log("Parameters",obsParameters)
+            console.log("Parameters",obsParameters.PW.value)
+            console.log("Parameters",obsParameters.Debug.checked)
+            let commandString = '';
+            if(window.navigator.platform.startsWith("Mac")){
+                commandString = 'open -n -a "';
+            }else{
+                document.getElementById("openOBSbutton").hidden = true;
+                document.getElementById("obsNameLabel").innerText = "Enter OBS app name including path:"
+                commandString = '"';
+            }
+            commandString += obsParameters.obsName.value;
+            commandString += '" --args --profile "';
+            commandString += obsParameters.profileName.value ;
+            commandString += '" --collection "';
+            commandString += obsParameters.collectionName.value ;
+            commandString += '" --websocket_port "';
+            commandString += obsParameters.Port.value ;
+            commandString += '" --websocket_password "';
+            commandString += obsParameters.PW.value ;
+            commandString += '" --multi';
+            if(obsParameters.Debug.checked){
+                commandString += ' --remote-debugging-port=9222 --remote-allow-origins=http://localhost:9222';
+            }
+            
+        //   --websocket_password "Dictionary (password)"
+            // const changedElement = event.target;
+            // const elementName = changedElement.name;
+            // const newValue = changedElement.value;
+
+            // console.log(`Element ${elementName} changed to: ${newValue}`);
+            document.getElementById('obsOpenCommand').value = commandString
+        }
+
+        async function copyCode(triggerButton, elementToCopy, buttonText) {
+            event.preventDefault()
+         
+            const button = document.getElementById(triggerButton)
+            if(button.innerText.endsWith("Copied")){
+                return //copied
+            }else{
+                let copyText = document.getElementById(elementToCopy).value//"obsOpenCommand");
+                await navigator.clipboard.writeText(copyText);
+            }
+
+            // visual feedback that task is completed
+            button.innerText = `${buttonText} Copied`;
+
+            setTimeout(() => {
+                button.innerText = buttonText;
+            }, 7000);
+        }
+
+//Get OBS Collection
+        let collection = new Object
+        let browserSources = [];
+
+        async function getOBScollection() {
+            //create collection object
+            collection.scenes = [];
+            //get scenes from OBS
+            collection = await obs.call("GetSceneList");
+
+            //get scene and sources
+            for (let scene = 0; scene < collection.scenes.length; scene++) {
+                const sources = await obs.call("GetSceneItemList", { sceneName: collection.scenes[scene].sceneName })
+
+                //get the source settings
+                for (let source = 0; source < sources.sceneItems.length; source++) {
+                    //if source is group, get group items
+                    if (sources.sceneItems[source].isGroup === true) {
+                        const groupSources = await obs.call("GetGroupSceneItemList", { sceneName: sources.sceneItems[source].sourceName })
+                        for (let groupSource = 0; groupSource < groupSources.sceneItems.length; groupSource++) {
+                            if (groupSources.sceneItems[groupSource].sourceType === 'OBS_SOURCE_TYPE_INPUT') {
+                            const groupSourceSettings = await obs.call("GetInputSettings", { inputName: groupSources.sceneItems[groupSource].sourceName })
+                            groupSources.sceneItems[groupSource] = Object.assign(groupSources.sceneItems[groupSource], groupSourceSettings)
+                            }
+                        }
+                        sources.sceneItems[source] = Object.assign(sources.sceneItems[source], groupSources)
+                    }
+                    if (sources.sceneItems[source].sourceType === 'OBS_SOURCE_TYPE_INPUT') {
+                        const sourceSettings = await obs.call("GetInputSettings", { inputName: sources.sceneItems[source].sourceName })
+                        sources.sceneItems[source] = Object.assign(sources.sceneItems[source], sourceSettings)
+                    }
+                }
+                //add the sources and settings to the scene object
+                collection.scenes[scene] = Object.assign(collection.scenes[scene], sources)
+            }
+
+            getBrowserSource();
+            
+            document.getElementById("obsCollection").innerHTML =`
+            <pre><code>${JSON.stringify(collection,null,2)}</code></pre>
+            `;
+            
+            //await makeTabulatorData();
+            
+            const postURL = `https://script.google.com/macros/s/${document.getElementById("postID").value}/exec`
+            
+            postData({data: `${JSON.stringify(collectionTabulator)}`}, postURL);
+
+            document.getElementById("obsCollectionTabulator").innerHTML =`
+            <pre><code>${JSON.stringify(collectionTabulator,null,4)}</code></pre>
+            `;
+
+        }
+
+        async function getBrowserSource() {
+            //clear browser sources section
+            document.getElementById("browserSources").innerHTML ='';
+
+            //get the browser sources from OBS
+            const browserSources = await obs.call("GetInputList", { inputKind: 'browser_source' })
+            //get the browser settings from OBS
+            for (let i = 0; i < browserSources.inputs.length; i++) {
+                const sourceSettings = await obs.call("GetInputSettings", { inputName: browserSources.inputs[i].inputName })
+                browserSources.inputs[i] = Object.assign(browserSources.inputs[i], sourceSettings)
+            }
+
+            //create input forms for each browser
+            for (let i = 0; i < browserSources.inputs.length; i++) {
+                const browserSettings = browserSources.inputs[i].inputSettings;
+
+                console.log(browserSettings)
+                const urlType = browserSettings.is_local_file === true ? 'local_file' : 'url';
+                browserLocation = urlType === "local_file" ? browserSettings.local_file : browserSettings.url
+                console.log(urlType, "browserLocation", typeof browserLocation, browserLocation)
+                //check if the browser source is a local file
+                if(browserSettings.is_local_file === true){
+                    //if protocol is included
+                    if(browserLocation.startsWith("file://")){
+                        browserURL =  encodeURI(browserSettings.local_file) 
+                    }else{
+                        browserURL =  encodeURI('file://' + browserSettings.local_file) 
+                    }
+                }
+                else{
+                    if(browserLocation.startsWith("http")){
+                        browserURL = encodeURI(browserSettings.url);
+                    }else{
+                        browserURL = encodeURI('http://' + browserSettings.url);
+                    }
+                }
+                const urlObject = new URL(browserURL);
+                const searchParams = new URLSearchParams(urlObject.search);
+                const urlHostPath = `${urlObject.origin}${urlObject.pathname}`;
+                console.log(urlObject)
+                let browserQueryParameterHTML = "";
+
+                //get query parameter values
+                if (browserURL.includes('?')) {
+                    searchParams.forEach((value, key) => {
+                        browserQueryParameterHTML += `
+                        <div class="form-grid-browser-card-div">
+                            <label for="${browserSources.inputs[i].inputName}-${key}">${key}:</label>
+                            <input type="text" id="${browserSources.inputs[i].inputName}-${key}" name="${browserSources.inputs[i].inputName}-${key}"  data-key="${key}" value="${value}" />
+                        </div>`
+                    });
+                }
+
+                const parentElement = document.getElementById("browserSources");
+                parentElement.innerHTML += `
+                    <form class="form-grid-browser">
+                        <div class="form-grid-browser-card">
+                            <fieldset>
+                                <legend>${browserSources.inputs[i].inputName}:</legend>
+                                    <div class="form-grid-browser-card-div">
+                                        <label for="${browserSources.inputs[i].inputName}-host">${urlType}</label>
+                                        <input type="text" id="${browserSources.inputs[i].inputName}-host" data-is-local-file=${browserSettings.is_local_file} name="${browserSources.inputs[i].inputName}-host" value="${urlHostPath}" required />
+                                    </div>
+                                <div id="queryParams-${i}">
+                                    </div>
+                            </fieldset>
+                        </div>
+                    </form>
+                                        `
+                if (browserQueryParameterHTML.length > 0) {
+                    document.getElementById(`queryParams-${i}`).innerHTML = `                    
+                    <details>
+                        <summary>Query Parameters</summary>
+                        ${browserQueryParameterHTML}    
+                        <p></p><input type="submit" id="button-${browserSources.inputs[i].inputName}"  onclick="modifyBrowser()" value="Modify" />
+                    </details>`
+                    document.getElementById(`queryParams-${i}`).innerHTML += `<div><button id="remoteLink-${i}" onclick="copyCode('remoteLink-${i}', 'remoteControl-${i}', 'Copy Link')">Copy Link</button><input type="text" id="remoteControl-${i}" value="${browserLocation.replace(".html","_Remote.html")}"/></div>`;
+                    //document.getElementById(`queryParams-${i}`).innerHTML += `<div><button id="remoteLink-${i}" onclick="copyCode()">Copy Link</button><input type="text" id="remoteControl-${i}" value="${browserLocation.replace(".html","_Remote.html")}"/></div>`;
+                } else {
+                    document.getElementById(`queryParams-${i}`).innerHTML = `                    
+                        <p></p><input type="submit" id="button-${browserSources.inputs[i].inputName}"  onclick="modifyBrowser()" value="Modify" />
+                    `
+                }
+            }
+
+        }
+
+        async function modifyBrowser() {
+
+            if (event.target.form[1].value.length > 0) {
+                event.preventDefault()
+                const browser = event.target.id.replace("button-", "");
+                const urlType = event.target.form[1].dataset.isLocalFile === 'true' ? 'local_file' : 'url';
+
+                let browserURL = event.target.form[1].value;
+                const queryParams = event.target.form;
+
+                if (event.target.form.length > 3) {
+                    browserURL += `?${event.target.form[2].dataset.key}=${event.target.form[2].value}`
+                    for (let i = 3; i < event.target.form.length - 3; i++) {
+                        //append query parameters to host. 
+                        browserURL += `&${event.target.form[i].dataset.key}=${event.target.form[i].value}`
+                    }
+                }
+
+                const settings = { [urlType] : ``}
+
+                await obs.call("SetInputSettings", {
+                    "inputName": browser,
+                    "inputSettings": {
+                        [urlType]: ``
+                    }
+                })
+
+                await obs.call("SetInputSettings", {
+                    "inputName": browser,
+                    "inputSettings": {
+                        [urlType]: `${browserURL}`
+                    }
+                })
+                getBrowserSource();
+            } else {
+                event.target.form[1].setCustomValidity('Enter the page location');
+            }
+        }
+
+    </script>
+    <script>
+        function replacer(key, value) {
+            if (value instanceof Map) {
+                return {
+                    dataType: 'Map',
+                    value: Array.from(value.entries()), // or with spread: value: [...value]
+                };
+            } else {
+                return value;
+            }
+        }
+
+        function reviver(key, value) {
+            if (typeof value === 'object' && value !== null) {
+                if (value.dataType === 'Map') {
+                    return new Map(value.value);
+                }
+            }
+            return value;
+        }
+
+    </script>
+    <script>
+        obs.on('Identified', async (data) => {
+            console.log('OBS WebSocket successfully identified', data);
+
+            document.getElementById("WSconnectButton").style.background = "#00ff00";
+
+            //get Browser source details
+            getOBScollection();
+
+            //send websocket server connection details to OBS browser sources
+            console.log(wssDetails)
+
+            await obs.call("CallVendorRequest", {
+                vendorName: "obs-browser",
+                requestType: "emit_event",
+                requestData: {
+                    event_name: "ws-details",
+                    event_data: { wssDetails },
+                },
+            });
+        });
+    </script>
+
+    <script>
+        //Post obs collection (tabulator and sheet version) to google sheet
+        //Google Apps Script API Post
+        async function postData(bodyData, fullURL){
+            const now = new Date();
+            const seconds = now.getSeconds();
+            console.log(seconds);   
+            bodyData.now = `${now.getMinutes()}:${now.getSeconds()}`;
+            bodyData.row = 1 + seconds;
+            bodyData.sheet = "Collection";
+            fetch(fullURL,{
+                method: 'POST',
+                mode:'no-cors',
+                // cache: 'no-cache',
+                // credentials:'omit',
+                // headers:{
+                //     'Content-Type':'application/json'
+                // },
+                redirect:'follow',
+                body: JSON.stringify(bodyData)
+            })
+            .then(res => {
+                console.log("response",JSON.stringify(res.json()));
+                res.json()
+            })
+            .then(data => {
+                //document.getElementById("postResults").innerText = JSON.stringify(data);
+                //console.log("post called",JSON.parse(data))
+                console.log("post called",data)
+                //console.log("content",JSON.parse(JSON.parse(data).postData.contents))
+                //console.log("content:",Object.keys(JSON.parse(JSON.parse(data).postData.contents))[0])
+            })
+        }
+    </script>
+</body>
+
+</html>
