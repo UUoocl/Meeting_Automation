@@ -67,7 +67,7 @@
                             newValues.forEach( async (value) => {
                                 value = JSON.parse(value)
                                 console.log(value)
-                                //Change lower third Content
+                            //Change lower third Content
                                 if (value.hasOwnProperty('lowerThirdSlideNumber')) {
                                     console.log("lowerthird found")
                                     //Transition slides when changing sections
@@ -91,6 +91,40 @@
                                         });
                                     }
                                     )
+                                }
+
+                            //Color Changed
+                                if (value.hasOwnProperty('Color')) {
+                                    msg = { setColor: value.Color };
+                                    await obs.call("CallVendorRequest", {
+                                        vendorName: "obs-browser",
+                                        requestType: "emit_event",
+                                        requestData: {
+                                            event_name: "colorChange",
+                                            event_data: { msg },
+                                        },
+                                    });
+
+                                }
+
+                                //Camera Changed
+                                if (value.hasOwnProperty('Camera')) {
+                                    if (value.Camera === "Speaker") {
+                                        enableSource('Cameras', 'Speaker')
+                                    }
+                                    if (value.Camera === "Audience") {
+                                        disableSource('Cameras', 'Speaker')
+                                        enableSource('Cameras', 'Audience')
+                                    }
+                                    if (value.Camera === "Zoom") {
+                                        disableSource('Cameras', 'Speaker')
+                                        disableSource('Cameras', 'Audience')
+                                    }
+                                    // else {
+                                    //     disableSource('TM-Timer-App', 'Camera Speaker')
+                                    //     disableSource('TM-Timer-App', 'Camera Speaker Segment')
+                                    //     disableSource('TM-Timer-App', 'Browser Agenda Slides')
+                                    // }
                                 }
                                 //run OBS command
                                 // switch(value.type){

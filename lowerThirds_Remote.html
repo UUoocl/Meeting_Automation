@@ -166,7 +166,7 @@
    
     <script >
         var startDateTime, endDateTime
-        var table, varID, Interval, varSection, varNames, varName, varMinutes;
+        var table, varID, Interval, varSection, varNames, varName, varMinutes, varDuration;
         var seconds, minutes;
         var timeGreen, timeYellow, timeRed, times, timeYellowMinutes, timeYellowSeconds
         var currentTableRow = 1;
@@ -383,7 +383,7 @@
             varSection = row.getData().Section;
             varMinutes = row.getData().Minutes;
             varName = row.getData().Name;
-            const varDuration = row.getData().Duration;
+            varDuration = row.getData().Duration;
             console.log("row details", varSection, varMinutes, varName, varDuration);
             const durationProp = "duration";
            
@@ -398,7 +398,10 @@
 
 
 
-            if (varDuration === undefined) { table.updateData([{ id: varID, Duration: "00:00" }]) };
+            if (varDuration == undefined) { 
+                table.updateData([{ id: varID, Duration: "00:00" }]) 
+                varDuration = "00:00";
+            };
             const durationParts = varDuration.split(":")
             document.getElementById("minutes").innerHTML = durationParts[0]
             document.getElementById("seconds").innerHTML = durationParts[1]
@@ -447,10 +450,10 @@
 		//wait for the next second to start
         setTimeout(() => {debounce = false;}, 1000 - now.getMilliseconds());
         
-	//  bodyData.now = `${now.getMinutes()}:${now.getSeconds()}`;
-        bodyData.row = 1 + (seconds % 15);
-        bodyData.column = 'A';
-        bodyData.sheet = "Commands";
+	    bodyData.n = `${now.getMinutes()}:${now.getSeconds()}`;
+        bodyData.r = 1 + (seconds % 15);
+        bodyData.c = 'A';
+        //bodyData.s = "Commands";
 
 		delete bodyData.ID;
 		delete bodyData.URL;
