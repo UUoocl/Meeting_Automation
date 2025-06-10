@@ -46,7 +46,14 @@
 		
 		Reveal.on('ready', event => {
 			console.log("reveal ready to run");
-			getSheetData();
+			const paramsString = window.location.search;
+            const searchParams = new URLSearchParams(paramsString);
+            
+            const tableData = {} 
+            tableData.sheetID = searchParams.get("sheetID")
+			tableData.sheetName = "Agenda";
+			tableData.sheetRange = "A1:E";
+			getSheetData(tableData);
 		})
 
 		//called from the script getSheetData.js
@@ -107,11 +114,11 @@
 
 		async function changeAgendaItem(slideID){
 			//hide
-			disableSource('Meeting Scene', 'Lower Thirds').then(async () =>
+			disableSource('Meeting', 'LowerThirds').then(async () =>
 				await setTimeout( () => {
 					Reveal.slide(slideID);
 					//show
-					enableSource('Meeting Scene', 'Lower Thirds');
+					enableSource('Meeting', 'LowerThirds');
 				}
 				, 300)		
 			)

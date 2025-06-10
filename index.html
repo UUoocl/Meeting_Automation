@@ -74,22 +74,6 @@
 
             </div>
             </div>
-        </section>
-        <section hidden>
-            <div id="collectionDetails">
-                <h3></h3>OBS Collection</h3>
-                <div id="obsCollection"></div>
-            </div>
-            </div>
-        </section>
-        
-        <section hidden>
-            <div id="collectionTabulatorFormat">
-                <h3></h3>OBS Collection Tabulator Format</h3>
-                <div id="obsCollectionTabulator"></div>
-            </div>
-            </div>
-        </section>
     </article>
 
     <script src='lib/obs-ws.js'></script>
@@ -323,21 +307,6 @@
             }
 
             getBrowserSource();
-            
-            document.getElementById("obsCollection").innerHTML =`
-            <pre><code>${JSON.stringify(collection,null,2)}</code></pre>
-            `;
-            
-            //await makeTabulatorData();
-            
-            const postURL = `https://script.google.com/macros/s/${document.getElementById("postID").value}/exec`
-            
-            postData({data: `${JSON.stringify(collectionTabulator)}`}, postURL);
-
-            document.getElementById("obsCollectionTabulator").innerHTML =`
-            <pre><code>${JSON.stringify(collectionTabulator,null,4)}</code></pre>
-            `;
-
         }
 
         async function getBrowserSource() {
@@ -510,41 +479,6 @@
                 },
             });
         });
-    </script>
-
-    <script>
-        //Post obs collection (tabulator and sheet version) to google sheet
-        //Google Apps Script API Post
-        async function postData(bodyData, fullURL){
-            const now = new Date();
-            const seconds = now.getSeconds();
-            console.log(seconds);   
-            bodyData.now = `${now.getMinutes()}:${now.getSeconds()}`;
-            bodyData.row = 1 + seconds;
-            bodyData.sheet = "Collection";
-            fetch(fullURL,{
-                method: 'POST',
-                mode:'no-cors',
-                // cache: 'no-cache',
-                // credentials:'omit',
-                // headers:{
-                //     'Content-Type':'application/json'
-                // },
-                redirect:'follow',
-                body: JSON.stringify(bodyData)
-            })
-            .then(res => {
-                console.log("response",JSON.stringify(res.json()));
-                res.json()
-            })
-            .then(data => {
-                //document.getElementById("postResults").innerText = JSON.stringify(data);
-                //console.log("post called",JSON.parse(data))
-                console.log("post called",data)
-                //console.log("content",JSON.parse(JSON.parse(data).postData.contents))
-                //console.log("content:",Object.keys(JSON.parse(JSON.parse(data).postData.contents))[0])
-            })
-        }
     </script>
 </body>
 
