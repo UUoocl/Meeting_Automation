@@ -251,8 +251,8 @@ outline: none;
               
               //word count
               document.getElementById('wordButton').onclick = () => { 
-                postData({SlideVisibility: "Hide"});}
-                // sendCommandToOBS(`{"setWord": "go"}`); };
+                //postData({SlideVisibility: "Hide"});}
+                postData({setWord: "go"}); };
             document.getElementById('nextButton').onclick = () => { selectTableRow(currentTableRow+1); };
         }
 

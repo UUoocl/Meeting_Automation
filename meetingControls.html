@@ -120,9 +120,9 @@
                                 }
 
                                 //Change Slide Content
-                                if (values.hasOwnProperty('SlideNumber')) {
+                                if (value.hasOwnProperty('SlideNumber')) {
                                     //Transition slides when changing sections
-                                    if (value.SlideVisibility === "Show" && value.Camera === "Speaker") {
+                                    //if (value.SlideVisibility === "Show" && value.Camera === "Speaker") {
                                         msg = { setSection: value.SlideNumber };
                                         await obs.call("CallVendorRequest", {
                                             vendorName: "obs-browser",
@@ -132,7 +132,24 @@
                                                 event_data: { msg },
                                             },
                                         });
-                                    }
+                                    //}
+
+                                }
+
+                                //show word of the day
+                                if (value.hasOwnProperty('setWord')) {
+                                    //Transition slides when changing sections
+                                    //if (value.SlideVisibility === "Show" && value.Camera === "Speaker") {
+                                        //msg = { setSection: value.SlideNumber };
+                                        await obs.call("CallVendorRequest", {
+                                            vendorName: "obs-browser",
+                                            requestType: "emit_event",
+                                            requestData: {
+                                                event_name: "showWord",
+                                                // event_data: { msg },
+                                            },
+                                        });
+                                    //}
 
                                 }
 

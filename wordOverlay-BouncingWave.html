@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <link rel="stylesheet" type="text/css" href="./css/BouncingWaveStyle.css">
+    <meta charset="utf-8" />
+
+</head>
+
+<body>
+    <main>
+    </main>
+    <!-- OBS WebSocket Server -->
+    <script src='lib/obs-ws.js'></script>
+    <script src='js/obsConnect.js'></script>
+
+    <!-- <script src="obs_webSocket_details/startConnection.js"></script> -->
+    <script>
+        let t;
+        //moved to obsConnect.js
+        // const obs = new OBSWebSocket();
+
+        // window.addEventListener(`ws-details`, async function (event) {
+        //     //event wss details
+        //     console.log("message received: ", event)
+        //     await wsConnect(event.detail.wssDetails);
+        // })
+
+        // async function wsConnect(wssDetails) {
+        //     await connectOBS(wssDetails)
+        // };
+
+        obs.on('Identified', async () => {
+            console.log("obs connected: ", event)
+
+            await getWotD();
+            
+            loadScript("lib/p5.js");
+            loadScript("sketch/BouncingWaveSketch.js");
+            loadScript("sketch/BouncingWaveText.js");
+            loadScript("sketch/BouncingWaveClass.js");
+            loadScript("sketch/easing.js");
+        })
+
+        async function getWotD() {
+            const WotD = await obs.call("GetInputSettings", {
+                inputName: 'wordText'
+            })
+            console.log('WotD', WotD)
+            t = WotD.inputSettings.text;
+        }
+
+        obs.on("InputSettingsChanged", async function (event) {
+            console.log("word changed")
+            //if LocalVocal Subtitle changed
+            if (event.inputName === "wordText") {
+                await getWotD();
+                await obs.call("SetSceneItemEnabled", {
+                    sceneName: "Word",
+                    sceneItemId: 1,
+                    sceneItemEnabled: true
+                }).then(setTimeout(async () => {
+                    obs.call("SetSceneItemEnabled", {
+                        sceneName: "Word",
+                        sceneItemId: 1,
+                        sceneItemEnabled: false
+                    })
+                }, 5000)
+                );
+            }
+        });
+
+        window.addEventListener(`showWord`, async function  (event) {
+            await obs.call("SetSceneItemEnabled", {
+                    sceneName: "Word",
+                    sceneItemId: 2,
+                    sceneItemEnabled: true
+                }).then(setTimeout(async () => {
+                    obs.call("SetSceneItemEnabled", {
+                        sceneName: "Word",
+                        sceneItemId: 2,
+                        sceneItemEnabled: false
+                    })
+                }, 5000)
+                );
+		})
+
+        function loadScript(script, module) {
+            const scriptElem = document.createElement("script");
+            scriptElem.src = `${script}`;
+            //scriptElem.async = script.async;
+            if (module) {
+                scriptElem.type = 'module';
+            }
+            else {
+                scriptElem.type = 'text/javascript';
+            }
+            scriptElem.onload = () => {
+                console.log(`${script} Script loaded successfully`);
+            };
+            scriptElem.onerror = () => {
+                console.log(`${script} Error occurred while loading script`);
+            };
+            document.body.appendChild(scriptElem);
+        }
+
+    </script>
+</body>
+
+</html>
