@@ -1,0 +1,319 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      div.sticky {
+        background-color: white;
+        position: -webkit-sticky; /* Safari */
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        text-align:center;
+      }
+
+body {
+font-family: "HelveticaNeue-Light", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif; 
+height:100%;
+}
+
+h1, h2, h3 {
+  font-family: 'Roboto', sans-serif;
+  font-weight: 100;
+  font-size: 1.6em;
+  text-transform: uppercase;
+}
+
+#minutes, #seconds{
+  font-size:1.5em;
+}
+
+.nextButton{
+text-decoration:none;
+cursor:pointer;
+font-size:1.0em;
+padding:5px 5px;
+width:80px;
+margin: 5px;
+outline: none;
+}
+
+.fieldButtonSet{
+  text-align:left;
+  width: auto;
+  position: relative;
+  left: 5px;
+  top: 0;
+  font-size: 0.8em;
+  margin: 5px;
+}
+
+.colorButton{
+  text-align: center;
+  width: 50px;
+  padding: 0;
+  margin: 5px;
+}
+
+.cameraButton{
+  text-align: center;
+  width: 60px;
+  padding: 0;
+  margin: 5px;
+}
+
+.tabulator-responsive-collapse td{
+  width: 60px;
+}
+
+    </style>
+    <link
+      href="https://unpkg.com/tabulator-tables@5.6.0/dist/css/tabulator.min.css"
+      rel="stylesheet"
+    />
+  <body>
+    <div class="sticky">
+      <div class="fieldButtonSet">
+        <fieldset id="cameraAngle"><legend>Choose camera</legend>
+          <button class="cameraButton" id="speakerButton">Speaker</button>
+          <button class="cameraButton" id="audienceButton">Audience</button>
+        </fieldset>
+      </div>
+
+      <div class="fieldButtonSet">
+        <fieldset><legend>Slide visibility</legend>
+          <button class="cameraButton" id="showSlideButton">Show</button>
+          <button class="cameraButton" id="hideSlideButton">Hide</button>
+        </fieldset>
+      </div>
+
+      <div class="fieldButtonSet">
+        <fieldset>    <legend>Set background color</legend>
+            <button class="colorButton" id="greenButton" style="background:lime">G</button>
+            <button class="colorButton" id="yellowButton" style="background:yellow">Y</button>
+            <button class="colorButton" id="redButton" style="background:red">R</button>
+            <button class="colorButton" id="whiteButton" style="background:white">W</button>`
+          </fieldset>
+      </div>
+
+      <div class="fieldButtonSet">
+        <fieldset>    <legend>Word of the day</legend>
+            <button class="wordButton" id="wordButton" >Word of the Day</button>
+          </fieldset>
+      </div>
+            <button class="nextButton" id="nextButton">Next</button>
+
+    </div>
+    <div id="agenda-table" style="z-index: 0"></div>
+
+
+  <script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.6.0/dist/js/tabulator.min.js"></script>
+  <script src="js/getSheetsData.js"></script>
+  
+  <script>
+    let postCommand = {};
+
+    //limit commands to 1 per second
+    let debounce = false;
+
+    //TODO: add post api url to the query parameters
+    
+    //const postURL = 'https://script.google.com/macros/s/AKfycbyH2oqEpe-8PTy8tfIbwB8MtpW8qQqH4dY8bmnfHQb559wCwGuSLxA8EZw9GIsSal14/exec'
+    window.onload = function () {
+      const paramsString = window.location.search;
+      const searchParams = new URLSearchParams(paramsString);
+      
+      const tableData = {} 
+      tableData.sheetID = searchParams.get("sheetID")
+			tableData.sheetName = "Slides";
+			tableData.sheetRange = "A1:E";
+
+			postCommand.ID = searchParams.get("gasID");
+      postCommand.URL = `https://script.google.com/macros/s/${postCommand.ID}/exec`
+
+      getSheetData(tableData);
+    };
+    </script>
+
+    <script id="load tabulator table">
+
+      let currentTableRow = 1;
+      let word;
+        //called from the script getSheetData.js
+        function loadData(headers, sheetData) {
+            if(localStorage.getItem("timerReport")){
+                const local_timerReport = JSON.parse(localStorage.getItem("timerReport"))
+                console.log("sheet", sheetData)
+                sheetData.forEach( (row, index) => {
+                    console.log("sheetData row",typeof row, row)    
+                    console.log("local report row",typeof index, index)    
+                    row.id = index+1;
+                    if(local_timerReport.hasOwnProperty(row.Section)){
+                        if(local_timerReport[row.Section].duration !== undefined){
+                            row.Duration = local_timerReport[row.Section].duration   
+                        }  
+                    }
+                });
+            }
+            //if data successfully returned
+            //create Tabulator on DOM element with id "example-table"
+            table = new Tabulator("#agenda-table", {
+                height: 2000, // set height of table (in CSS or here)
+                rowHeight: 50,
+                data: sheetData, //assign data to table
+                layout: "fitColumns", //fit columns to width of table (optional)
+                columns: [
+                    //Define Table Columns
+                    {
+                        title: headers[1],
+                        field: headers[1],
+                        width: 150,
+                        headerSort: false,
+                    },
+                    {
+                        title: headers[2],
+                        field: headers[2],
+                        width: 70,
+                        hozAlign: "left",
+                        headerSort: false,
+                    },
+                    {
+                        title: headers[3],
+                        field: headers[3],
+                        headerSort: false,
+                        width: 150,
+                    },
+                    {
+                        title: headers[4],
+                        field: headers[4],
+                        width: 150,
+                        sorter: "date",
+                        hozAlign: "center",
+                        headerSort: false,
+                        editor: "input",
+                    },
+                ],
+            });
+
+            //table built, select row 1
+            table.on("tableBuilt", function () {
+                table.deselectRow();
+                table.selectRow(table.getRowFromPosition(1));
+            });
+
+            //Clicked table row
+            table.on("rowClick", function (e, row) {
+                console.log("e=index", row.getPosition())
+                console.log("e", e)
+                console.log("row", row)
+                table.deselectRow();
+                table.selectRow(table.getRowFromPosition(row.getPosition()));
+                //rowChanged(row)
+            });
+
+            //Button moved selected table row
+            table.on("rowSelected", function (row) { rowChanged(row) });
+
+            //background color
+            document.getElementById('greenButton').onclick = () => {
+                // agendaChangedPost.entries.color.entryValue = "Green";
+                postData({Color: "Green"});}
+                // submitGoogleForm(agendaChangedPost);}
+            document.getElementById('yellowButton').onclick = () => { 
+                // agendaChangedPost.entries.color.entryValue = "Yellow";
+                postData({Color: "Yellow"});}
+                // submitGoogleForm(agendaChangedPost);}
+            document.getElementById('redButton').onclick = () => { 
+                // agendaChangedPost.entries.color.entryValue = "Red";
+                postData({Color: "Red"});}
+                //submitGoogleForm(agendaChangedPost);}
+            document.getElementById('whiteButton').onclick = () => { 
+                // agendaChangedPost.entries.color.entryValue = "White";
+                postData({Color: "White"});}
+                // submitGoogleForm(agendaChangedPost);}
+            
+            //camera  
+            document.getElementById('speakerButton').onclick = () => { 
+              //changeCameraForm.entries.camera.entryValue = "Speaker";
+              postData({Camera: "Speaker"});}
+              // submitGoogleForm(changeCameraForm);}
+              document.getElementById('audienceButton').onclick = () => { 
+                //changeCameraForm.entries.camera.entryValue = "Audience";
+                postData({Camera: "Audience"});}
+                // submitGoogleForm(changeCameraForm);}
+                
+                //slides
+                document.getElementById('showSlideButton').onclick = () => { 
+              postData({SlideVisibility: "Show"});}
+              // sendCommandToOBS(`{"setSource": "Show"}`); };
+              document.getElementById('hideSlideButton').onclick = () => { 
+              postData({SlideVisibility: "Hide"});}
+              // sendCommandToOBS(`{"setSource": "Hide"}`); };
+              
+              //word count
+              document.getElementById('wordButton').onclick = () => { 
+                postData({SlideVisibility: "Hide"});}
+                // sendCommandToOBS(`{"setWord": "go"}`); };
+            document.getElementById('nextButton').onclick = () => { selectTableRow(currentTableRow+1); };
+        }
+
+        function rowChanged(row) {
+
+            console.log("rowSelected", row.getData().id);
+            console.log("table object", table.getData());
+
+            currentTableRow = row.getPosition();
+            //change lower third slide to match selected row
+            postData({SlideNumber: `${currentTableRow-1}`});
+          //  submitGoogleForm(slideChangedPost);
+        }
+
+        function selectTableRow(row) {
+            console.log("selectRow", row)    
+            table.deselectRow();
+            table.selectRow(table.getRowFromPosition(row));
+        }
+
+     //Google Apps Script API Post
+    async function postData(tableData){
+      bodyData = JSON.parse(JSON.stringify(tableData));
+      const now = new Date();
+      const seconds = now.getSeconds();
+
+      //wait for the next second to start
+      setTimeout(() => {debounce = false;}, 1000 - now.getMilliseconds());
+
+      bodyData.n = `${now.getMinutes()}:${now.getSeconds()}`;
+      bodyData.r = 1 + (seconds % 15);
+      bodyData.c = 'B';
+      //bodyData.s = "Commands";
+
+      delete bodyData.ID;
+      delete bodyData.URL;
+
+      fetch(postCommand.URL,{
+        method: 'POST',
+        mode:'no-cors',
+        //cache: 'no-cache',
+        // credentials:'omit',
+        // headers:{
+        //     'Content-Type':'application/json'
+        // },
+        redirect:'follow',
+        body: JSON.stringify(bodyData)
+      })
+      .then(res => res.json())
+      .then(data => {
+        //document.getElementById("postResults").innerText = JSON.stringify(data);
+        //console.log("post called",JSON.parse(data))
+        console.log("post called",data)
+        //console.log("content",JSON.parse(JSON.parse(data).postData.contents))
+        //console.log("content:",Object.keys(JSON.parse(JSON.parse(data).postData.contents))[0])
+      })
+    }
+    </script>
+
+<!-- <button onclick="startBroadcast()">Start Broadcast</button>
+<button onclick="stopBroadcast()">Stop Broadcast</button> -->
+<div id="log"></div>
+</body>
+</html>

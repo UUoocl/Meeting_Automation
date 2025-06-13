@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html class="sl-root decks export offline loaded">
+    <head>
+        <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>Sheets Slides</title>
+		<!-- <link rel="stylesheet" href="dist/reset.css">
+		<link rel="stylesheet" href="dist/reveal.css"> -->
+        <link rel="stylesheet" type="text/css" href="dist/offline-v2.css">
+		<!-- <link rel="stylesheet" href="dist/theme/black.css" id="theme"> -->
+    </head>
+    
+    <body class="reveal-viewport theme-font-montserrat theme-color-white-blue">
+    <!-- route vdo messages to control slide  -->
+    <div class="reveal">
+        <div class="slides" id="slides">
+            <section style="top: 350px;" id="placeholder">Loading Slides</section>
+        </div>
+    </div>
+
+	<!-- OBS WebSocket Server -->
+	<script src='lib/obs-ws.js'></script>
+    <script src='js/obsConnect.js'></script>
+
+	<!-- Reveal Slides -->
+	<script src="dist/reveal.js"></script>
+    
+    <!-- Get Data from Google Sheet -->
+    <script src='js/getSheetsData.js'></script>
+    
+	// <!-- Initialize the presentation -->
+    <script>
+        let word, tableData;
+
+        Reveal.initialize({
+			width: 1280,
+			height: 720,
+            margin: 0.0,
+            progress: false,
+            center: true,
+            controls: false,
+			transition: "cut",
+			backgroundTransition: "cut",
+        });
+
+		Reveal.on('ready', event => {
+			console.log("reveal ready to run");
+			const paramsString = window.location.search;
+            const searchParams = new URLSearchParams(paramsString);
+            
+            const tableData = {} 
+            tableData.sheetID = searchParams.get("sheetID")
+			tableData.sheetName = "Slides";
+			tableData.sheetRange = "A1:E";
+			getSheetData(tableData);
+		})
+
+		//called from the script getSheetData.js
+		function loadData(headers, data){
+			createSlides(data);
+			tableData = data;
+		}
+
+async function createSlides(slidesContent) {
+			document.getElementById('slides').innerHTML = '';
+
+			console.log("load slides", slidesContent)
+			for (let i = 0; i < slidesContent.length; i++) {
+				// 1. Select the parent element
+				const parentElement = document.getElementById('slides');
+
+				// 2. Create the new element
+				const newElement = document.createElement('section');
+
+				// 3. Add content to the new element (optional)
+				newElement.innerHTML = `
+<section>
+<div class="sl-block" style="height: auto; width: 80px; left: 40px; top: 34.75px;">
+    <div class="sl-block-content" style="z-index: 11; text-align: center;">
+        <h2 id="sectionIcon-${i}">🎙️</h2>
+    </div>
+</div>
+<div class="sl-block" data-block-type="text" style="width: 447px; left: 123px; top: 40.25px; height: auto;" data-block-id="a064e1f517a730152cc10f781da9cb25" data-name="text-a89808">
+    <div class="sl-block-content" data-placeholder-tag="h1" data-placeholder-text="Title Text" style="z-index: 12; font-size: 85%; text-align: center; color: rgb(238, 238, 238);" data-has-custom-html="">
+        <h2 id="Section-${i}"><strong><span style="font-size:1.0em;">${slidesContent[i].Section}</span></strong></h2>
+    </div>
+</div>
+<div class="sl-block" data-block-type="shape" data-name="shape-195f4c" style="width: 640px; height: 720px; left: 0px; top: 0px;" data-block-id="af6756d0630733e4c55f77fe79ca949d">
+    <div class="sl-block-content" data-shape-type="rect" data-shape-fill-color="rgba(119, 17, 38, 0.9)" data-shape-stretch="true" style="z-index: 10;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 640 720">
+            <rect width="640" height="720" rx="0" ry="0" class="shape-element" fill="rgba(119, 17, 38, 0.9)"></rect>
+        </svg></div>
+</div>
+<div class="sl-block" data-block-type="line" data-name="line-5baef2" data-block-id="01bd45e27af44c2ebff099784299fbe8" style="width: auto; height: auto; min-width: 0px; min-height: 0px; left: 52.5px; top: 108.25px;">
+    <div class="sl-block-content" data-line-x1="0" data-line-y1="0" data-line-x2="479" data-line-y2="1" data-line-color="#cccccc" data-line-width="6px" data-line-start-type="none" data-line-end-type="none" data-line-style="solid-rounded" style="z-index: 13;"><svg xmlns="http://www.w3.org/2000/svg" version="1.1" preserveAspectRatio="xMidYMid" width="479" height="1" viewBox="0 0 479 1">
+            <path class="line-element" fill="rgba(0,0,0,0)" stroke="#cccccc" stroke-width="6" stroke-linecap="round" d="M0 0 L479 1"></path>
+            <path class="line-skeleton" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" d="M0 0 L479 1"></path>
+            <path class="line-hitarea" fill="rgba(0,0,0,0)" stroke="rgba(0,0,0,0)" stroke-width="15" d="M0 0 L479 1"></path>
+        </svg></div>
+</div>
+<div class="sl-block" style="height: auto; width: 610px; left: 24px; top: 144px;">
+    <div class="sl-block-content" style="z-index: 14; font-size: 85%; color: rgb(238, 238, 238); text-align: center;">
+            <h2 id="path-${i}" style="text-align: center;"><span style="font-size:1.0em">${slidesContent[i].Path}</span></h2>
+    </div>
+</div>
+<div class="sl-block" style="height: auto; width: 610px; left: 24px; top: 280px;">
+    <div class="sl-block-content" style="z-index: 14; font-size: 85%; color: rgb(238, 238, 238); text-align: center;">
+            <h2 id="project-${i}" style="text-align: center;"><span style="font-size:1.0em">${slidesContent[i].Project}</span></h2>
+    </div>
+</div>
+<div class="sl-block" style="height: auto; width: 610px; left: 24px; top: 420px;">
+    <div class="sl-block-content" style="z-index: 14; font-size: 85%; color: rgb(238, 238, 238); text-align: center;">
+            <h2 id="title-${i}" style="text-align: center;"><span style="font-size:1.0em">${slidesContent[i].Title}</span></h2>
+    </div>
+</div>
+<div class="sl-block" data-block-type="text" style="height: auto; width: 610px; left: 15px; top: 616.5px;" data-block-id="4fc35e8e8fdaddfd5189849f4742b9a0" data-name="text-c1d118">
+    <div class="sl-block-content" data-placeholder-tag="p" data-placeholder-text="Text" style="z-index: 15; font-size: 85%; color: rgb(238, 238, 238);" data-has-custom-html="">
+        <h3 id="speaker-${i}"><span style="font-size:1.0em">${slidesContent[i].Name}</span></h3>
+    </div>
+</div>
+</section>
+		`;
+				newElement.id = `slide ${i}`
+				// 4. Append the new element
+				parentElement.appendChild(newElement);
+				Reveal.next()
+
+                //set word of the day
+                if(slidesContent[i].Section === "Word"){
+                    console.log("word found", slidesContent[i])
+                    word = slidesContent[i].Path ? slidesContent[i].Path : "undefined";
+                }
+			}
+			Reveal.slide(0)
+
+			console.log("slide creation complete")
+			return;
+		}
+
+		async function changeAgendaItem(slideID){
+			//hide
+			disableSource('Meeting', 'Slides').then(async () =>
+				await setTimeout( () => {
+					Reveal.slide(slideID);
+					//show
+					enableSource('Meeting', 'Slides');
+				}
+				, 1000)		
+			)
+		}
+
+		async function enableSource(sceneName, sourceName) {
+			//Get the Scene Item Id number
+			const sceneItemId = await obs.call("GetSceneItemId",{
+				sceneName: sceneName,
+				sourceName: sourceName,
+			})
+			//Set the 'Next Slide' Source to Enabled    
+			await obs.call("SetSceneItemEnabled", {
+				sceneName: sceneName,
+				sceneItemId: Number(sceneItemId.sceneItemId),
+				sceneItemEnabled: true
+			});
+		}	
+		
+		async function disableSource(sceneName, sourceName) {
+			//Get the Scene Item Id number
+            const sceneItemId = await obs.call("GetSceneItemId",{
+				sceneName: sceneName,
+                sourceName: sourceName,
+            })
+			//Set the 'Next Slide' Source to Enabled    
+            await obs.call("SetSceneItemEnabled", {
+				sceneName: sceneName,
+                sceneItemId: Number(sceneItemId.sceneItemId),
+                sceneItemEnabled: false
+            });
+        }
+
+
+		window.addEventListener(`SlideChange`, function (event) {
+            //section command
+			console.log("message received: ", event)
+			if(event.detail.msg.setSection){
+				//console.log(tableData, event.detail.msg.setSection)
+				// console.log(tableData.findIndex( (section) => {
+				// 	return section.Section === event.detail.msg.setSection;
+				// 	})
+				// )
+				const slideNumber = event.detail.msg.setSection;
+				changeAgendaItem(slideNumber);
+			}
+			
+		})
+        console.log("obs status", obs)
+	</script>
+</body>
+
+</html>

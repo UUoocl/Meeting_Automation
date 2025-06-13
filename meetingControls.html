@@ -106,6 +106,35 @@
                                     });
 
                                 }
+                            
+                                //Slide Visibity changed 
+                                if (value.hasOwnProperty('SlideVisibility')) {
+                                    if (value.SlideVisibility === "Show") {
+                                        enableSource('Meeting', 'Slides')
+                                        enableSource('Cameras Segment', 'Speaker Segment')
+                                    }
+                                    else {
+                                        disableSource('Meeting', 'Slides')
+                                        setTimeout(() => disableSource('Cameras Segment', 'Speaker Segment'), 200)
+                                    }
+                                }
+
+                                //Change Slide Content
+                                if (values.hasOwnProperty('SlideNumber')) {
+                                    //Transition slides when changing sections
+                                    if (value.SlideVisibility === "Show" && value.Camera === "Speaker") {
+                                        msg = { setSection: value.SlideNumber };
+                                        await obs.call("CallVendorRequest", {
+                                            vendorName: "obs-browser",
+                                            requestType: "emit_event",
+                                            requestData: {
+                                                event_name: "SlideChange",
+                                                event_data: { msg },
+                                            },
+                                        });
+                                    }
+
+                                }
 
                                 //Camera Changed
                                 if (value.hasOwnProperty('Camera')) {
