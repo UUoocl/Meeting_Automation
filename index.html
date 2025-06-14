@@ -498,7 +498,7 @@
             
             browserSources.inputs.forEach( async (browser) =>{
                 if(browser.inputName.endsWith("+")){
-                    const url = `http://127.0.0.1:3001/${browser.inputName.replace("+","")}.html?sheetID=${document.getElementById("sheetID").value}&gasID=${document.getElementById("gasID").value}`
+                    const url = `https://uuoocl.github.io/Meeting_Automation/${browser.inputName.replace("+","")}.html?sheetID=${document.getElementById("sheetID").value}&gasID=${document.getElementById("gasID").value}`
                     console.log(browser)
                     await obs.call("SetInputSettings", {
                         "inputName": browser.inputName,
