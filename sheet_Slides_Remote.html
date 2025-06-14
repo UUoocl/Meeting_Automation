@@ -76,6 +76,7 @@ outline: none;
         <fieldset id="cameraAngle"><legend>Choose camera</legend>
           <button class="cameraButton" id="speakerButton">Speaker</button>
           <button class="cameraButton" id="audienceButton">Audience</button>
+          <button class="cameraButton" id="zoomButton">Zoom</button>
         </fieldset>
       </div>
 
@@ -233,13 +234,11 @@ outline: none;
             
             //camera  
             document.getElementById('speakerButton').onclick = () => { 
-              //changeCameraForm.entries.camera.entryValue = "Speaker";
               postData({Camera: "Speaker"});}
-              // submitGoogleForm(changeCameraForm);}
-              document.getElementById('audienceButton').onclick = () => { 
-                //changeCameraForm.entries.camera.entryValue = "Audience";
-                postData({Camera: "Audience"});}
-                // submitGoogleForm(changeCameraForm);}
+            document.getElementById('audienceButton').onclick = () => { 
+            postData({Camera: "Audience"});}
+            document.getElementById('zoomButton').onclick = () => { 
+            postData({Camera: "Zoom"});}
                 
                 //slides
                 document.getElementById('showSlideButton').onclick = () => { 
@@ -252,7 +251,7 @@ outline: none;
               //word count
               document.getElementById('wordButton').onclick = () => { 
                 //postData({SlideVisibility: "Hide"});}
-                postData({setWord: "go"}); };
+                postData({showWord: "show"}); };
             document.getElementById('nextButton').onclick = () => { selectTableRow(currentTableRow+1); };
         }
 

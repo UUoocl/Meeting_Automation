@@ -47,17 +47,26 @@
                 <div><button id="copyCommand">Copy Command</button><input type="text" id="obsOpenCommand"/></div>
             </div>
         </section>
-        
+                
         <section>
             <div id="postURL">
-                <h3>Set Google Sheets web app API key</h3>
+                <h3>Set Google Apps Script web app ID</h3>
                 <form class="form-grid">
-                    <label for="postID">Enter Sheets API ID:</label>
-                    <input type="text" id="postID" name="postID" value="webapp ID" />
+                    <label for="gasID">Enter Google Apps Script ID:</label>
+                    <input type="text" id="gasID" name="gasID" value="Apps Script ID" />
                 </form>
             </div>
         </section>
-        
+
+        <section>
+            <div id="sheetURL">
+                <h3>Set Google Sheet ID</h3>
+                <form class="form-grid">
+                    <label for="sheetID">Enter Google Sheet ID:</label>
+                    <input type="text" id="sheetID" name="sheetID" value="sheet ID" />
+                </form>
+            </div>
+        </section>
         <section>
             <div id="srvr">
                 <h3>Connect to the OBS WebSocket Server</h3>
@@ -66,14 +75,20 @@
                 </form>
             </div>
         </section>
+        
+        <section>
+            <div id="links">
+                <h3>Links to the remote control pages</h3>
+                <div id="remotes"></div>
+            </div>
+        </section>
 
         <section>
             <div id="setBrowser">
-                <h3></h3>OBS Browser Sources</h3>
+                <h3>OBS Browser Sources</h3>
                 <div id="browserSources"></div>
-
             </div>
-            </div>
+        </section>
     </article>
 
     <script src='lib/obs-ws.js'></script>
@@ -115,10 +130,9 @@
 
             obsLaunchCommand();
         })
+
         //button functions            
         function openOBS() {
-            let uuinsomeHREF = window.location.href;
-            // "path":"${uuinsomeHREF}",
             let inputArray = JSON.stringify(`{"obsName":"${document.getElementById("obsName").value}","profileName":"${document.getElementById("profileName").value}","collectionName":"${document.getElementById("collectionName").value}","ip":"${document.getElementById("IP").value}","port":"${document.getElementById("Port").value}","password":"${document.getElementById("PW").value}"}`)
             console.log(inputArray)
             if (document.getElementById("Debug").checked) {
@@ -147,7 +161,8 @@
                     Port: wssDetails.PORT,
                     obsPW: wssDetails.PW,
                     debugMode: document.getElementById("Debug").checked,
-                    apiID: document.getElementById("postID").value
+                    apiID: document.getElementById("gasID").value,
+                    sheetID: document.getElementById("sheetID").value
                 })
 
             localStorage.setItem("configName", document.getElementById("configName").value);
@@ -187,7 +202,8 @@
             document.getElementById("profileName").value = configItem?.profileName;
             document.getElementById("collectionName").value = configItem?.collectionName;
             document.getElementById("Debug").value = configItem?.debugMode;
-            document.getElementById("postID").value = configItem?.apiID;
+            document.getElementById("gasID").value = configItem?.apiID;
+            document.getElementById("sheetID").value = configItem?.sheetID;
         }
 
         function configSelected() {
@@ -310,8 +326,10 @@
         }
 
         async function getBrowserSource() {
+            const browsersWithRemotes = {LowerThirds:"Timer",Slides:"Slides"}
             //clear browser sources section
             document.getElementById("browserSources").innerHTML ='';
+            document.getElementById(`remotes`).innerHTML ='';
 
             //get the browser sources from OBS
             const browserSources = await obs.call("GetInputList", { inputKind: 'browser_source' })
@@ -325,7 +343,8 @@
             for (let i = 0; i < browserSources.inputs.length; i++) {
                 const browserSettings = browserSources.inputs[i].inputSettings;
 
-                console.log(browserSettings)
+                console.log("browser", browserSources.inputs[i])
+                console.log("settings",browserSettings)
                 const urlType = browserSettings.is_local_file === true ? 'local_file' : 'url';
                 browserLocation = urlType === "local_file" ? browserSettings.local_file : browserSettings.url
                 console.log(urlType, "browserLocation", typeof browserLocation, browserLocation)
@@ -385,13 +404,17 @@
                         ${browserQueryParameterHTML}    
                         <p></p><input type="submit" id="button-${browserSources.inputs[i].inputName}"  onclick="modifyBrowser()" value="Modify" />
                     </details>`
-                    document.getElementById(`queryParams-${i}`).innerHTML += `<div><button id="remoteLink-${i}" onclick="copyCode('remoteLink-${i}', 'remoteControl-${i}', 'Copy Link')">Copy Link</button><input type="text" id="remoteControl-${i}" value="${browserLocation.replace(".html","_Remote.html")}"/></div>`;
-                    //document.getElementById(`queryParams-${i}`).innerHTML += `<div><button id="remoteLink-${i}" onclick="copyCode()">Copy Link</button><input type="text" id="remoteControl-${i}" value="${browserLocation.replace(".html","_Remote.html")}"/></div>`;
                 } else {
                     document.getElementById(`queryParams-${i}`).innerHTML = `                    
-                        <p></p><input type="submit" id="button-${browserSources.inputs[i].inputName}"  onclick="modifyBrowser()" value="Modify" />
+                    <p></p><input type="submit" id="button-${browserSources.inputs[i].inputName}"  onclick="modifyBrowser()" value="Modify" />
                     `
                 }
+                
+                if(Object.keys(browsersWithRemotes).includes(browserSources.inputs[i].inputName )){
+                    console.log(browserSources.inputs[i].inputName)
+                    document.getElementById(`remotes`).innerHTML += `<div><div>${browsersWithRemotes[browserSources.inputs[i].inputName]} page link<div><button id="remoteLink-${i}" onclick="copyCode('remoteLink-${i}', 'remoteControl-${i}', 'Copy Link')">Copy Link</button><input type="text" id="remoteControl-${i}" value="${browserLocation.replace(".html","_Remote.html")}"/></div>`;
+                }
+
             }
 
         }
@@ -406,9 +429,11 @@
                 let browserURL = event.target.form[1].value;
                 const queryParams = event.target.form;
 
+                console.log(event)
+
                 if (event.target.form.length > 3) {
                     browserURL += `?${event.target.form[2].dataset.key}=${event.target.form[2].value}`
-                    for (let i = 3; i < event.target.form.length - 3; i++) {
+                    for (let i = 3; i < event.target.form.length - 1; i++) {
                         //append query parameters to host. 
                         browserURL += `&${event.target.form[i].dataset.key}=${event.target.form[i].value}`
                     }
@@ -464,11 +489,25 @@
 
             document.getElementById("WSconnectButton").style.background = "#00ff00";
 
-            //get Browser source details
-            getOBScollection();
-
+            
             //send websocket server connection details to OBS browser sources
             console.log(wssDetails)
+            
+            const browserSources = await obs.call("GetInputList", { inputKind: 'browser_source' })
+            console.log(browserSources)
+            
+            browserSources.inputs.forEach( async (browser) =>{
+                if(browser.inputName.endsWith("+")){
+                    const url = `http://127.0.0.1:3001/${browser.inputName.replace("+","")}.html?sheetID=${document.getElementById("sheetID").value}&gasID=${document.getElementById("gasID").value}`
+                    console.log(browser)
+                    await obs.call("SetInputSettings", {
+                        "inputName": browser.inputName,
+                        "inputSettings": {
+                            url: url
+                        }
+                    })
+                }
+            })
 
             await obs.call("CallVendorRequest", {
                 vendorName: "obs-browser",
@@ -478,6 +517,9 @@
                     event_data: { wssDetails },
                 },
             });
+
+            //get Browser source details
+            getOBScollection();
         });
     </script>
 </body>

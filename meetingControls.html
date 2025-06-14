@@ -110,11 +110,11 @@
                                 //Slide Visibity changed 
                                 if (value.hasOwnProperty('SlideVisibility')) {
                                     if (value.SlideVisibility === "Show") {
-                                        enableSource('Meeting', 'Slides')
+                                        enableSource('Meeting', 'sheet_Slides+')
                                         enableSource('Cameras Segment', 'Speaker Segment')
                                     }
                                     else {
-                                        disableSource('Meeting', 'Slides')
+                                        disableSource('Meeting', 'sheet_Slides+')
                                         setTimeout(() => disableSource('Cameras Segment', 'Speaker Segment'), 200)
                                     }
                                 }
@@ -137,20 +137,31 @@
                                 }
 
                                 //show word of the day
-                                if (value.hasOwnProperty('setWord')) {
+                                if (value.hasOwnProperty('showWord')) {
                                     //Transition slides when changing sections
                                     //if (value.SlideVisibility === "Show" && value.Camera === "Speaker") {
                                         //msg = { setSection: value.SlideNumber };
-                                        await obs.call("CallVendorRequest", {
-                                            vendorName: "obs-browser",
-                                            requestType: "emit_event",
-                                            requestData: {
-                                                event_name: "showWord",
-                                                // event_data: { msg },
-                                            },
-                                        });
-                                    //}
+                                        // await obs.call("CallVendorRequest", {
+                                        //     vendorName: "obs-browser",
+                                        //     requestType: "emit_event",
+                                        //     requestData: {
+                                        //         event_name: "showWord",
+                                        //         // event_data: { msg },
+                                        //     },
+                                        // });
 
+                                    await obs.call("SetSceneItemEnabled", {
+                                        sceneName: "Word",
+                                        sceneItemId: 2,
+                                        sceneItemEnabled: true
+                                    }).then(setTimeout(async () => {
+                                        obs.call("SetSceneItemEnabled", {
+                                            sceneName: "Word",
+                                            sceneItemId: 2,
+                                            sceneItemEnabled: false
+                                        })
+                                    }, 5000))
+                        
                                 }
 
                                 //Camera Changed
