@@ -71,26 +71,36 @@
                                 if (value.hasOwnProperty('lowerThirdSlideNumber')) {
                                     console.log("lowerthird found")
                                     //Transition slides when changing sections
+                                    msg = { setSection: value.lowerThirdSlideNumber };
+                                    console.log(msg)
+                                    await obs.call("CallVendorRequest", {
+                                        vendorName: "obs-browser",
+                                        requestType: "emit_event",
+                                        requestData: {
+                                            event_name: "lowerSectionChange",
+                                            event_data: { msg },
+                                        },
+                                    });
                                     //hide
-                                    disableSource('Meeting', 'lower_Thirds+').then(async () =>
+                                    // disableSource('Meeting', 'lower_Thirds+').then(async () =>
                                     //Show
-                                    {
-                                        await setTimeout(() => {
-                                            enableSource('Meeting', 'lower_Thirds+')
-                                        }
-                                            , 300);
-                                        msg = { setSection: value.lowerThirdSlideNumber };
-                                        console.log(msg)
-                                        await obs.call("CallVendorRequest", {
-                                            vendorName: "obs-browser",
-                                            requestType: "emit_event",
-                                            requestData: {
-                                                event_name: "lowerSectionChange",
-                                                event_data: { msg },
-                                            },
-                                        });
-                                    }
-                                    )
+                                    // {
+                                    //     await setTimeout(() => {
+                                    //         enableSource('Meeting', 'lower_Thirds+')
+                                    //     }
+                                    //         , 300);
+                                    //     msg = { setSection: value.lowerThirdSlideNumber };
+                                    //     console.log(msg)
+                                    //     await obs.call("CallVendorRequest", {
+                                    //         vendorName: "obs-browser",
+                                    //         requestType: "emit_event",
+                                    //         requestData: {
+                                    //             event_name: "lowerSectionChange",
+                                    //             event_data: { msg },
+                                    //         },
+                                    //     });
+                                    // }
+                                    // )
                                 }
 
                             //Color Changed

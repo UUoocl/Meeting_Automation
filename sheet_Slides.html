@@ -140,11 +140,11 @@ async function createSlides(slidesContent) {
 
 		async function changeAgendaItem(slideID){
 			//hide
-			disableSource('Meeting', 'Slides').then(async () =>
+			disableSource('Meeting', 'sheet_Slides+').then(async () =>
 				await setTimeout( () => {
 					Reveal.slide(slideID);
 					//show
-					enableSource('Meeting', 'Slides');
+					enableSource('Meeting', 'sheet_Slides+');
 				}
 				, 1000)		
 			)
