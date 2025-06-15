@@ -49,6 +49,16 @@
         </section>
                 
         <section>
+            <div id="sheetURL">
+                <h3>Set Google Sheet ID</h3>
+                <form class="form-grid">
+                    <label for="sheetID">Enter Google Sheet ID:</label>
+                    <input type="text" id="sheetID" name="sheetID" value="sheet ID" />
+                </form>
+            </div>
+        </section>
+        
+        <section>
             <div id="postURL">
                 <h3>Set Google Apps Script web app ID</h3>
                 <form class="form-grid">
@@ -58,15 +68,6 @@
             </div>
         </section>
 
-        <section>
-            <div id="sheetURL">
-                <h3>Set Google Sheet ID</h3>
-                <form class="form-grid">
-                    <label for="sheetID">Enter Google Sheet ID:</label>
-                    <input type="text" id="sheetID" name="sheetID" value="sheet ID" />
-                </form>
-            </div>
-        </section>
         <section>
             <div id="srvr">
                 <h3>Connect to the OBS WebSocket Server</h3>
@@ -413,10 +414,10 @@
                 if(Object.keys(browsersWithRemotes).includes(browserSources.inputs[i].inputName )){
                     console.log(browserSources.inputs[i].inputName)
                     document.getElementById(`remotes`).innerHTML += `<div><div>${browsersWithRemotes[browserSources.inputs[i].inputName]} page link<div><button id="remoteLink-${i}" onclick="copyCode('remoteLink-${i}', 'remoteControl-${i}', 'Copy Link')">Copy Link</button><input type="text" id="remoteControl-${i}" value="${browserLocation.replace(".html","_Remote.html")}"/></div>`;
-                }
-
+                }                
             }
-
+            //add a link to the Um counter page
+            document.getElementById(`remotes`).innerHTML += `<div><div>Um Counter page link<div><button id="remoteLink-um" onclick="copyCode('remoteLink-um', 'remoteControl-um', 'Copy Link')">Copy Link</button><input type="text" id="remoteControl-um" value='https://uuoocl.github.io/Meeting_Automation/um_Counter.html?sheetID=${document.getElementById("sheetID").value}&gasID=${document.getElementById("gasID").value}')}"/></div>`;
         }
 
         async function modifyBrowser() {

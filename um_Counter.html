@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <title>Uh Counter</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
         div.sticky {
@@ -99,6 +100,26 @@
             padding: 0;
             margin: 5px;
         }
+      button {
+        @include corners(5px);
+        background: $base-color;
+        color: $white;
+        border: solid 1px $white;
+        text-decoration: none;
+        cursor: pointer;
+        font-size: 1.2em;
+        padding: 18px 10px;
+        width: 180px;
+        margin: 10px;
+        outline: none;
+        &:hover {
+          @include transition;
+          background: $white;
+          border: solid 1px $white;
+          color: $base-color;
+        }
+      }
+
         </style>
     <link href="https://unpkg.com/tabulator-tables@6.3.0/dist/css/tabulator.min.css" rel="stylesheet" />
 </head>
@@ -121,14 +142,25 @@
                 <button class="colorButton" id="whiteButton" style="background:white">W</button>`
             </fieldset>
         </div>
-        
-        <h1 id="SectionTitle">Timer App</h1>
-        <span id="minutes">00</span>:<span id="seconds">00</span></p>
-        <button class="timerButton" id="button-start">Start</button>
-        <!-- <button id="button-stop">Stop</button> -->
-        <button class="timerButton" id="button-reset">Next</button>
-    </div>
-    <div id="agenda-table" style="z-index: 0"></div>
+
+        <div class="fieldButtonSet">
+        <fieldset>    <legend>Word of the day</legend>
+            <button class="wordButton" id="wordButton" >Word of the Day</button>
+          </fieldset>
+      </div>
+
+        <h1 id="SectionTitle">Uh Counter App</h1>
+        <button id="button-start">
+            Sounds<br /><span style="font-size: 80%">Uh, Um, Er</span>
+        </button>
+        <button id="button-stop">
+            Filler Words<br /><span style="font-size: 80%">Like, So, You know</span>
+        </button>
+        <button id="button-reset">
+            Grammar<br /><span style="font-size: 80%">Repeats, But, And</span>
+        </button>
+        </div>
+        <div id="agenda-table" style="z-index: 0"></div>
     
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
     <script src="js/getSheetsData.js"></script>
@@ -148,9 +180,6 @@
 			tableData.sheetName = "Agenda";
 			tableData.sheetRange = "A1:E";
 
-			const timerChangedParam = searchParams.get("timerChanged");
-            const submitReportParam = searchParams.get("submitReport");
-
 			postCommand.ID = searchParams.get("gasID");
             postCommand.URL = `https://script.google.com/macros/s/${postCommand.ID}/exec`
             
@@ -165,12 +194,13 @@
     </script>
    
     <script >
-        var startDateTime, endDateTime
-        var table, varID, Interval, varSection, varNames, varName, varMinutes, varDuration;
-        var seconds, minutes;
-        var timeGreen, timeYellow, timeRed, times, timeYellowMinutes, timeYellowSeconds
-        var currentTableRow = 1;
+        let startDateTime, endDateTime
+        let table, varID, Interval, varSection, varNames, varName, varMinutes, varDuration;
+        let seconds, minutes;
+        let timeGreen, timeYellow, timeRed, times, timeYellowMinutes, timeYellowSeconds
+        let currentTableRow = 1;
         let timerReport = {};
+        let varCount=0, varFillerCount=0, varGrammarCount=0;
         document.addEventListener("DOMContentLoaded", pageLoad);
 
         async function pageLoad() {
@@ -188,98 +218,44 @@
 
         function setupTimer() {
             var buttonStart = document.getElementById('button-start');
-            //var buttonStop = document.getElementById('button-stop');
+            var buttonStop = document.getElementById('button-stop');
             var buttonReset = document.getElementById('button-reset');
 
-            //get selected row duration
-            //set timer to current duration
-            minutes = document.getElementById("minutes").innerHTML;
-            seconds = document.getElementById("seconds").innerHTML;
-            var appendSeconds = document.getElementById("seconds")
-            var appendMinutes = document.getElementById("minutes")
-
             buttonStart.onclick = function () {
-                if (document.getElementById('button-start').innerHTML === 'Start') {
-                    document.getElementById('button-start').innerHTML = 'Stop';
-                    buttonReset.style.visibility = "hidden";
-                    clearInterval(Interval);
-                    startDateTime = GetDate();
-                    times = varMinutes.split("-");
-                    timeGreen = Number(times[0])
-                    timeRed = Number(times[1])
-                    numTimeRed = timeRed.toFixed(0)
-                    console.log(`red: ${numTimeRed}`)
-                    timeYellow = ((timeRed - timeGreen) / 2) + timeGreen
-                    timeYellowSeconds = (timeYellow % 1) * 60
-                    timeYellowMinutes = Math.floor(Number(timeYellow / 1))
-                    console.log(`Green: ${timeGreen}, Yellow: ${timeYellowMinutes}:${timeYellowSeconds},Red: ${timeRed}`)
-              
-                    selectTableRow(currentTableRow);
-
-                    Interval = setInterval(startTimer, 1000);
-                    return;
-                }
-                
-                if (document.getElementById('button-start').innerHTML === 'Stop') {
-                    document.getElementById('button-start').innerHTML = 'Start';
-                    buttonReset.style.visibility = "visible";
-                    endDateTime = GetDate()
-                    const stopTime = document.getElementById("minutes").innerHTML + ":" + document.getElementById("seconds").innerHTML
-                    table.updateData([{ id: varID, Duration: stopTime }]);
-
-                        clearInterval(Interval);
-                    
-                    selectTableRow(currentTableRow);
-                }
-            }
-
-
+                varCount = Number(table.getRowFromPosition(varID).getData().Sounds);
+                varCount =  isNaN(varCount) ? 1 : Number(varCount)+1;
+                table.updateData([
+                    {
+                        id: varID,
+                        Sounds: varCount,
+                    },
+                ]);
+            };
+            
+            buttonStop.onclick = function () {
+                varCount = Number(table.getRowFromPosition(varID).getData().Filler);
+                varCount =  isNaN(varCount) ? 1 : Number(varCount)+1;
+                table.updateData([
+                    {
+                        id: varID,
+                        Filler: varCount,
+                    },
+                ]);
+            };
             buttonReset.onclick = function () {
-                clearInterval(Interval);
-                console.log("Current Row Variable:",currentTableRow)
-                selectTableRow(currentTableRow+1);
-            }
-
-            function startTimer() {
-                console.log("timer started seconds", seconds)
-                seconds++;
-                if (seconds <= 9) {
-                    appendSeconds.innerHTML = "0" + seconds;
-                }
-
-                if (seconds > 9) {
-                    appendSeconds.innerHTML = seconds;
-                }
-
-                if (seconds > 59) {
-                    console.log("minutes");
-                    minutes++;
-                    appendMinutes.innerHTML = "0" + minutes;
-                    seconds = 0;
-                    appendSeconds.innerHTML = "0" + 0;
-                }
-
-                if (minutes > 9) {
-                    appendMinutes.innerHTML = minutes;
-                }
-                console.log(minutes, timeGreen, minutes == timeGreen, minutes == timeYellowMinutes)
-                switch (true) {
-                    case (minutes >= timeRed && seconds == 0):
-						console.log("matched red");
-						postData({Color: "Red"})
-						break;  
-					case (minutes == timeYellowMinutes && seconds == timeYellowSeconds):
-						console.log("matched yellow")
-						postData({Color: "Yellow"})
-						break;
-					case (minutes == timeGreen && seconds == 0):
-						console.log("matched green")
-						postData({Color: "Green"})
-						break;
-                }
-            }
-
-
+                varCount = Number(table.getRowFromPosition(varID).getData().Grammar);
+                varCount =  isNaN(varCount) ? 1 : Number(varCount)+1;    
+                table.updateData([
+                    {
+                    id: varID,
+                    Grammar: varCount,
+                    },
+                ]);
+            };
+            //word count
+            document.getElementById('wordButton').onclick = () => { 
+            //postData({SlideVisibility: "Hide"});}
+            postData({showWord: "show"}); };
         }
 
         //called from the script getSheetData.js
@@ -309,7 +285,7 @@
                 columns: [
                     //Define Table Columns
                     {
-                        title: headers[1],
+                        title: "Section",
                         field: headers[1],
                         width: 150,
                         headerSort: false,
@@ -317,24 +293,29 @@
                     {
                         title: headers[2],
                         field: headers[2],
+                        width: 150,
+                        hozAlign: "left",
+                        headerSort: false,
+                    },
+                    {
+                        title: "Sounds",
+                        field: "Sounds",
                         width: 70,
                         hozAlign: "left",
                         headerSort: false,
                     },
                     {
-                        title: headers[3],
-                        field: headers[3],
-                        headerSort: false,
-                        width: 150,
-                    },
-                    {
-                        title: headers[4],
-                        field: headers[4],
-                        width: 150,
-                        sorter: "date",
+                        title: "Filler",
+                        field: "Filler",
+                        width: 70,
                         hozAlign: "center",
                         headerSort: false,
-                        editor: "input",
+                    },
+                    {
+                        title: "Grammar",
+                        field: "Grammar",
+                        width: 80,
+                        headerSort: false,
                     },
                 ],
             });
@@ -352,6 +333,7 @@
                 console.log("row", row)
                 table.deselectRow();
                 table.selectRow(table.getRowFromPosition(row.getPosition()));
+
             });
 
             //Button moved selected table row
@@ -369,59 +351,41 @@
 
             setupTimer();
             document.getElementById('greenButton').onclick = () => {
-                postData({Color: "Green"});}
+                // postData({Color: "Green"});
+                }
             document.getElementById('yellowButton').onclick = () => { 
-                postData({Color: "Yellow"});}
+                // postData({Color: "Yellow"});
+                }
             document.getElementById('redButton').onclick = () => { 
-                postData({Color: "Red"});}
+                // postData({Color: "Red"});
+                }
             document.getElementById('whiteButton').onclick = () => { 
-                postData({Color: "White"});}
+                // postData({Color: "White"});
+                }
         }
 
         function rowChanged(row) {
 
+            varID = row.getData().id;
             varSection = row.getData().Section;
             varMinutes = row.getData().Minutes;
             varName = row.getData().Name;
             varDuration = row.getData().Duration;
-            console.log("row details", varSection, varMinutes, varName, varDuration);
+            console.log("row details", varID, varSection, varMinutes, varName, varDuration);
             const durationProp = "duration";
-           
-            timerReport[varSection] = {};
-            timerReport[varSection][durationProp]= varDuration ;
-           
-            console.log("timerReportObject", timerReport)
-            localStorage.setItem("timerReport", JSON.stringify(timerReport))
-           
-            console.log("dur",row)
+                       
             varID = row.getData().id;
 
-
-
-            if (varDuration == undefined) { 
-                table.updateData([{ id: varID, Duration: "00:00" }]) 
-                varDuration = "00:00";
-            };
-            const durationParts = varDuration.split(":")
-            document.getElementById("minutes").innerHTML = durationParts[0]
-            document.getElementById("seconds").innerHTML = durationParts[1]
-            minutes = Number(durationParts[0])
-            seconds = Number(durationParts[1])
-            console.log('timer variables', minutes, seconds)
-            const clockElemTitle = document.getElementById("SectionTitle");
-
             console.log(`section variable ${varSection}`)
-            clockElemTitle.innerHTML = varSection
+            document.getElementById("SectionTitle").innerHTML = varSection;
 
             var rowPos = row.getPosition();
-            console.log(`row position: ${rowPos}`)
-            console.log(`var currentTableRow position: ${rowPos-1}`)
             currentTableRow = row.getPosition();
             //change lower third slide to match selected row
 			postCommand.Color = "White";
 			postCommand.lowerThirdSlideNumber = `${rowPos-1}`;
             
-            postData(postCommand);
+            //postData(postCommand);
         }
 
         function selectTableRow(row) {
@@ -442,42 +406,41 @@
 
 <script>
     //Google Apps Script API Post
-    async function postData(tableData){
-        bodyData = JSON.parse(JSON.stringify(tableData));
-		const now = new Date();
-        const seconds = now.getSeconds();
+     async function postData(tableData){
+      bodyData = JSON.parse(JSON.stringify(tableData));
+      const now = new Date();
+      const seconds = now.getSeconds();
 
-		//wait for the next second to start
-        setTimeout(() => {debounce = false;}, 1000 - now.getMilliseconds());
-        
-	    bodyData.n = `${now.getMinutes()}:${now.getSeconds()}`;
-        bodyData.r = 1 + (seconds % 15);
-        bodyData.c = 'A';
-        //bodyData.s = "Commands";
+      //wait for the next second to start
+      setTimeout(() => {debounce = false;}, 1000 - now.getMilliseconds());
 
-		delete bodyData.ID;
-		delete bodyData.URL;
+      bodyData.n = `${now.getMinutes()}:${now.getSeconds()}`;
+      bodyData.r = 1 + (seconds % 15);
+      bodyData.c = 'B';
+      //bodyData.s = "Commands";
 
-		fetch(postCommand.URL,{
-            method: 'POST',
-            mode:'no-cors',
-            //cache: 'no-cache',
-            // credentials:'omit',
-            // headers:{
-            //     'Content-Type':'application/json'
-            // },
-            redirect:'follow',
-            body: JSON.stringify(bodyData)
-        })
-//Fix: the response is not being returned
-        .then(res => res.text())
-        .then(data => {
-            //document.getElementById("postResults").innerText = JSON.stringify(data);
-            //console.log("post called",JSON.parse(data))
-            console.log("post called",data)
-            //console.log("content",JSON.parse(JSON.parse(data).postData.contents))
-            //console.log("content:",Object.keys(JSON.parse(JSON.parse(data).postData.contents))[0])
-        })
+      delete bodyData.ID;
+      delete bodyData.URL;
+
+      fetch(postCommand.URL,{
+        method: 'POST',
+        mode:'no-cors',
+        //cache: 'no-cache',
+        // credentials:'omit',
+        // headers:{
+        //     'Content-Type':'application/json'
+        // },
+        redirect:'follow',
+        body: JSON.stringify(bodyData)
+      })
+      .then(res => res.json())
+      .then(data => {
+        //document.getElementById("postResults").innerText = JSON.stringify(data);
+        //console.log("post called",JSON.parse(data))
+        console.log("post called",data)
+        //console.log("content",JSON.parse(JSON.parse(data).postData.contents))
+        //console.log("content:",Object.keys(JSON.parse(JSON.parse(data).postData.contents))[0])
+      })
     }
 </script>
 <!-- 

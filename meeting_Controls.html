@@ -72,11 +72,11 @@
                                     console.log("lowerthird found")
                                     //Transition slides when changing sections
                                     //hide
-                                    disableSource('Meeting', 'LowerThirds').then(async () =>
+                                    disableSource('Meeting', 'lower_Thirds+').then(async () =>
                                     //Show
                                     {
                                         await setTimeout(() => {
-                                            enableSource('Meeting', 'LowerThirds')
+                                            enableSource('Meeting', 'lower_Thirds+')
                                         }
                                             , 300);
                                         msg = { setSection: value.lowerThirdSlideNumber };
