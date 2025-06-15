@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Uh Counter</title>
+    <title>Um Counter</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
         div.sticky {
@@ -100,6 +100,16 @@
             padding: 0;
             margin: 5px;
         }
+.nextButton{
+text-decoration:none;
+cursor:pointer;
+font-size:1.0em;
+padding:5px 5px;
+width:80px;
+margin: 5px;
+outline: none;
+}
+    
       button {
         @include corners(5px);
         background: $base-color;
@@ -133,7 +143,7 @@
             </fieldset>
         </div> -->
         
-        <div class="fieldButtonSet">
+        <!-- <div class="fieldButtonSet">
             <fieldset>
                 <legend>Manually Set background color</legend>
                 <button class="colorButton" id="greenButton" style="background:lime">G</button>
@@ -141,7 +151,7 @@
                 <button class="colorButton" id="redButton" style="background:red">R</button>
                 <button class="colorButton" id="whiteButton" style="background:white">W</button>`
             </fieldset>
-        </div>
+        </div> -->
 
         <div class="fieldButtonSet">
         <fieldset>    <legend>Word of the day</legend>
@@ -160,13 +170,18 @@
             Grammar<br /><span style="font-size: 80%">Repeats, But, And</span>
         </button>
         </div>
+
+        <fieldset>    <legend>Next agenda item</legend>
+        <button class="nextButton" id="nextButton">Next</button>
+        </fieldset>
+
         <div id="agenda-table" style="z-index: 0"></div>
     
     <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.3.0/dist/js/tabulator.min.js"></script>
     <script src="js/getSheetsData.js"></script>
     
     <script>
-        let postCommand = {}, postReport = {};
+        let postCommand = {}, postReport = {}, word;
 
 		//limit commands to 1 per second
         let debounce = false;
@@ -190,7 +205,23 @@
 			console.log( postReport.ID)
             
             getSheetData(tableData);
+            getWord(tableData.sheetID);
         };
+
+        async function getWord(sheetID){
+            const sheetUrl = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?sheet=Word&range=A1:A`;
+            
+            await fetch(sheetUrl)
+                 .then((res) => res.text())
+                 .then(async (rep) => {
+                     const sheetData = JSON.parse(rep.substring(47).slice(0, -2));
+                     console.log("fetched:", sheetData);
+                     console.log("fetched:", sheetData.table.rows[0].c[0].v);
+                     word = sheetData.table.rows[0].c[0].v
+                    })
+            
+            document.getElementById("wordButton").innerHTML += `<br/>${word}`; 
+        }
     </script>
    
     <script >
@@ -199,7 +230,8 @@
         let seconds, minutes;
         let timeGreen, timeYellow, timeRed, times, timeYellowMinutes, timeYellowSeconds
         let currentTableRow = 1;
-        let timerReport = {};
+        let umReport = {};
+        let umReportDate;
         let varCount=0, varFillerCount=0, varGrammarCount=0;
         document.addEventListener("DOMContentLoaded", pageLoad);
 
@@ -230,6 +262,7 @@
                         Sounds: varCount,
                     },
                 ]);
+                setLocalStorage()
             };
             
             buttonStop.onclick = function () {
@@ -241,6 +274,7 @@
                         Filler: varCount,
                     },
                 ]);
+                setLocalStorage()
             };
             buttonReset.onclick = function () {
                 varCount = Number(table.getRowFromPosition(varID).getData().Grammar);
@@ -251,11 +285,36 @@
                     Grammar: varCount,
                     },
                 ]);
+                setLocalStorage()
             };
             //word count
             document.getElementById('wordButton').onclick = () => { 
             //postData({SlideVisibility: "Hide"});}
             postData({showWord: "show"}); };
+
+            //next agenda item
+            document.getElementById('nextButton').onclick = () => { selectTableRow(currentTableRow+1); };
+
+        }
+
+        function setLocalStorage(){
+            console.log(table)
+            localStorage.setItem("umReport", JSON.stringify(table.getData()));
+        }
+
+        function resetLocalStorage(){
+            let date = new Date;
+            date = `${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2,0)}${date.getDate().toString().padStart(2,0)}`
+            if(date !== localStorage.getItem("umReportDate") || !(localStorage.getItem('umReport').startsWith("["))){
+                localStorage.setItem("umReportDate", date);
+                localStorage.setItem("umReport", ``);
+                console.log("reset")
+            } 
+            else{ 
+                umReport = JSON.parse(localStorage.getItem("umReport"))
+                table.replaceData(umReport);
+                console.log("load local storage")
+            }
         }
 
         //called from the script getSheetData.js
@@ -322,6 +381,7 @@
 
             //table built, select row 1
             table.on("tableBuilt", function () {
+                resetLocalStorage();
                 table.deselectRow();
                 table.selectRow(table.getRowFromPosition(1));
             });
@@ -350,18 +410,18 @@
 
 
             setupTimer();
-            document.getElementById('greenButton').onclick = () => {
-                // postData({Color: "Green"});
-                }
-            document.getElementById('yellowButton').onclick = () => { 
-                // postData({Color: "Yellow"});
-                }
-            document.getElementById('redButton').onclick = () => { 
-                // postData({Color: "Red"});
-                }
-            document.getElementById('whiteButton').onclick = () => { 
-                // postData({Color: "White"});
-                }
+            // document.getElementById('greenButton').onclick = () => {
+            //     // postData({Color: "Green"});
+            //     }
+            // document.getElementById('yellowButton').onclick = () => { 
+            //     // postData({Color: "Yellow"});
+            //     }
+            // document.getElementById('redButton').onclick = () => { 
+            //     // postData({Color: "Red"});
+            //     }
+            // document.getElementById('whiteButton').onclick = () => { 
+            //     // postData({Color: "White"});
+            //     }
         }
 
         function rowChanged(row) {
@@ -446,7 +506,7 @@
 <!-- 
     <button onclick="startBroadcast()">Start Broadcast</button>
     <button onclick="stopBroadcast()">Stop Broadcast</button> -->
-    <button onclick="submitTimerReport(agendaReportPost)">Submit Report</button>
-    <div id="log"></div>
+    <!-- <button onclick="submitTimerReport(agendaReportPost)">Submit Report</button>
+    <div id="log"></div> -->
 </body>
 </html>
