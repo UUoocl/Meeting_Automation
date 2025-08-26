@@ -266,9 +266,10 @@
 
                 //timer action delayed about 5 seconds
                 secondsPlus5 = Number(seconds) + 5 
-                    if(secondsPlus5 > 59) {
-                        secondsPlus5 = 0;
-                        minutesOffset = Number(minutes) + 1;
+                if(secondsPlus5 > 59) {
+                    secondsPlus5 = 0;
+                    minutesOffset = Number(minutes) + 1;
+                };
                 console.log("secondsPlus5", secondsPlus5, typeof secondsPlus5)
                 switch (true) {
                     case (minutesOffset >= timeRed && secondsPlus5 == 0):
