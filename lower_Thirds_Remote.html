@@ -263,16 +263,19 @@
                     appendMinutes.innerHTML = minutes;
                 }
                 console.log(minutes, timeGreen, minutes == timeGreen, minutes == timeYellowMinutes)
+
+                //timer action delayed about 5 seconds
+                secondsPlus5 = seconds + 5;
                 switch (true) {
-                    case (minutes >= timeRed && seconds == 0):
+                    case (minutes >= timeRed && secondsPlus5 == 0):
 						console.log("matched red");
 						postData({Color: "Red"})
 						break;  
-					case (minutes == timeYellowMinutes && seconds == timeYellowSeconds):
+					case (minutes == timeYellowMinutes && secondsPlus5 == timeYellowSeconds):
 						console.log("matched yellow")
 						postData({Color: "Yellow"})
 						break;
-					case (minutes == timeGreen && seconds == 0):
+					case (minutes == timeGreen && secondsPlus5 == 0):
 						console.log("matched green")
 						postData({Color: "Green"})
 						break;

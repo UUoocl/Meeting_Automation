@@ -93,13 +93,14 @@
     </article>
 
     <script src='lib/obs-ws.js'></script>
-    <script src='js/obsConnect.js'></script>
+    <script src='js/chromeToWssConnection.js'></script>
     <!-- <script src='js/obsCollectionCopy.js'></script> -->
     <script>
         let wssDetails, configName;
         let configMap = new Map();
 
         document.addEventListener("DOMContentLoaded", (event) => {
+            console.log("DOM fully loaded and parsed");
             // on load get stored launch parameters
             if (localStorage.getItem("configName")) {
                 getLocalStorageConfigOptions();
@@ -134,6 +135,7 @@
 
         //button functions            
         function openOBS() {
+            console.log("Open OBS with parameters")
             let inputArray = JSON.stringify(`{"obsName":"${document.getElementById("obsName").value}","profileName":"${document.getElementById("profileName").value}","collectionName":"${document.getElementById("collectionName").value}","ip":"${document.getElementById("IP").value}","port":"${document.getElementById("Port").value}","password":"${document.getElementById("PW").value}"}`)
             console.log(inputArray)
             if (document.getElementById("Debug").checked) {
@@ -179,6 +181,10 @@
         }
 
         function getLocalStorageConfigOptions() {
+            if(!localStorage.getItem("configMap")){
+                return
+            }
+
             //get configurations in local storage
             configMap = JSON.parse(localStorage.getItem("configMap"), reviver)
 
@@ -197,14 +203,14 @@
 
             document.getElementById("configName").value = selectedConfig;
             document.getElementById("obsName").value = configItem?.obsName;
-            document.getElementById("IP").value = configItem?.IP;
-            document.getElementById("Port").value = configItem?.Port;
-            document.getElementById("PW").value = configItem?.obsPW;
+            document.getElementById("IP").value = configItem?.IP || "localhost";
+            document.getElementById("Port").value = configItem?.Port || "4455";
+            document.getElementById("PW").value = configItem?.obsPW || Date.now();
             document.getElementById("profileName").value = configItem?.profileName;
             document.getElementById("collectionName").value = configItem?.collectionName;
             document.getElementById("Debug").value = configItem?.debugMode;
-            document.getElementById("gasID").value = configItem?.apiID;
-            document.getElementById("sheetID").value = configItem?.sheetID;
+            document.getElementById("gasID").value = configItem?.apiID || "Apps Script ID";
+            document.getElementById("sheetID").value = configItem?.sheetID || "Sheet ID";
         }
 
         function configSelected() {
@@ -482,7 +488,6 @@
             }
             return value;
         }
-
     </script>
     <script>
         obs.on('Identified', async (data) => {
