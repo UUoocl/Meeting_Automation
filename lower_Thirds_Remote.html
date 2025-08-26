@@ -265,18 +265,21 @@
                 console.log(minutes, timeGreen, minutes == timeGreen, minutes == timeYellowMinutes)
 
                 //timer action delayed about 5 seconds
-                secondsPlus5 = Number(seconds) + 5 > 59 ? 0 : Number(seconds) + 5;
+                secondsPlus5 = Number(seconds) + 5 
+                    if(secondsPlus5 > 59) {
+                        secondsPlus5 = 0;
+                        minutesOffset = Number(minutes) + 1;
                 console.log("secondsPlus5", secondsPlus5, typeof secondsPlus5)
                 switch (true) {
-                    case (minutes >= timeRed && secondsPlus5 == 0):
+                    case (minutesOffset >= timeRed && secondsPlus5 == 0):
 						console.log("matched red");
 						postData({Color: "Red"})
 						break;  
-					case (minutes == timeYellowMinutes && secondsPlus5 == timeYellowSeconds):
+					case (minutesOffset == timeYellowMinutes && secondsPlus5 == timeYellowSeconds):
 						console.log("matched yellow")
 						postData({Color: "Yellow"})
 						break;
-					case (minutes == timeGreen && secondsPlus5 == 0):
+					case (minutesOffset == timeGreen && secondsPlus5 == 0):
 						console.log("matched green")
 						postData({Color: "Green"})
 						break;
