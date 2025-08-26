@@ -265,7 +265,8 @@
                 console.log(minutes, timeGreen, minutes == timeGreen, minutes == timeYellowMinutes)
 
                 //timer action delayed about 5 seconds
-                secondsPlus5 = seconds + 5;
+                secondsPlus5 = Number(seconds) + 5;
+                console.log("secondsPlus5", secondsPlus5, typeof secondsPlus5)
                 switch (true) {
                     case (minutes >= timeRed && secondsPlus5 == 0):
 						console.log("matched red");
