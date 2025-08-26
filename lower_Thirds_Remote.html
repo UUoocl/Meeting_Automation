@@ -266,8 +266,8 @@
 
                 //timer action delayed about 5 seconds
                 secondsOffset = Number(seconds) + 3 
-                if(secondsPlus5 > 59) {
-                    secondsPlus5 = 0;
+                if(secondsOffset > 59) {
+                    secondsOffset = 0;
                     minutesOffset = Number(minutes) + 1;
                 };
                 switch (true) {
