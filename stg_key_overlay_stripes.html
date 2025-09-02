@@ -85,6 +85,38 @@
             break;
         }
       })
+
+      window.addEventListener('SceneItemEnableStateChanged', function (event) {
+        console.log(event);
+      });
+      obs.on("SceneItemEnableStateChanged", async function (event) {
+        const itemSource = await obs.call('GetSceneItemSource', {sceneName: event.sceneName, sceneItemId: event.sceneItemId })
+          // obs.call('GetSceneItemSource', {sceneName: event.sceneName, sceneItemId: event.sceneItemId }).then(data => {
+          //   console.log("Item source", data);
+          // }); 
+          console.log("state changed",event, itemSource);
+          //console.log("state changed",itemSource.sourceName);
+        switch(itemSource.sourceName){
+          case 'cursor':
+            break;
+          case 'Show WotD':
+            if(event.sceneItemEnabled){
+            const WotD = await obs.call("GetInputSettings", {
+              inputName: 'Word'
+            })
+            console.log('WotD', WotD)
+            const t = WotD.inputSettings.text;  
+            notSoWeird(t);
+            timer = 3;
+            }
+            break;
+          case 'Change Camera':
+            console.log("change camera", event.sceneItemEnabled);
+            break;
+          default:
+            break;
+        }
+      })
     </script>
     <!-- <script>
         function myFunction() {

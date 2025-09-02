@@ -12,12 +12,15 @@
     <main>
     </main>
     <!-- OBS WebSocket Server -->
-    <!-- <script src='lib/obs-ws.js'></script>
-    <script src='js/obsConnect.js'></script> -->
+    <script src='lib/obs-ws.js'></script>
+    <script src='js/obsConnect.js'></script>
 
     <!-- <script src="obs_webSocket_details/startConnection.js"></script> -->
     <script>
         let t;
+        let itemID;
+        let itemSource;
+        let itemLock;
         //moved to obsConnect.js
         // const obs = new OBSWebSocket();
 
@@ -33,41 +36,96 @@
 
          window.addEventListener(`load`, async function (event) {
             //event wss details
-            console.log("page loaded: ", event);
-            const paramsString = window.location.search;
-            const searchParams = new URLSearchParams(paramsString);
-            console.log(searchParams)
+            // console.log("page loaded: ", event);
+            // const paramsString = window.location.search;
+            // const searchParams = new URLSearchParams(paramsString);
+            // console.log(searchParams)
 
-            const SHEET_ID = searchParams.get("sheetID");
-            const SHEET_TITLE = "Word";
-            const SHEET_RANGE = "A1:A1";
-            let sheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_TITLE}&range=${SHEET_RANGE}`;
+            // const SHEET_ID = searchParams.get("sheetID");
+            // const SHEET_TITLE = "Word";
+            // const SHEET_RANGE = "A1:A1";
+            // let sheetUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${SHEET_TITLE}&range=${SHEET_RANGE}`;
             
-            fetch(sheetUrl)
-                 .then((res) => res.text())
-                 .then(async (rep) => {
-                     let sheetData = JSON.parse(rep.substring(47).slice(0, -2));
-                     console.log("fetched:", sheetData);
-                     console.log("fetched:", sheetData.table.rows[0].c[0].v);
-                     //const tableData = await sheetDataToObject(sheetData.table);
+            // fetch(sheetUrl)
+            //      .then((res) => res.text())
+            //      .then(async (rep) => {
+            //          let sheetData = JSON.parse(rep.substring(47).slice(0, -2));
+            //          console.log("fetched:", sheetData);
+            //          console.log("fetched:", sheetData.table.rows[0].c[0].v);
+            //          //const tableData = await sheetDataToObject(sheetData.table);
 
-                     //const headers = sheetData.table.cols.map((obj) => obj["label"]);
-                     t = sheetData.table.rows[0].c[0].v
-                     console.log("t",t)
-                     loadScript("lib/p5.js");
-                     loadScript("sketch/BouncingWaveSketch.js");
-                     loadScript("sketch/BouncingWaveText.js");
-                     loadScript("sketch/BouncingWaveClass.js");
-                     loadScript("sketch/easing.js");
-                 });
+            //          //const headers = sheetData.table.cols.map((obj) => obj["label"]);
+            //          t = sheetData.table.rows[0].c[0].v
+            //          console.log("t",t)
+            //         });
+                })
+                
+        obs.on('Identified', async () => {
+            const WotD = await obs.call("GetInputSettings", {
+                inputName: 'Word'
+            })
+            console.log('WotD', WotD)
+            t = WotD.inputSettings.text;  
+
+            itemID = await obs.call("GetSceneItemId", {
+                sceneName: 'Word of the Day',
+                sourceName: 'wordOverlay-BouncingWave+'
+            })
+
+            itemLock = await obs.call("GetSceneItemLocked", {
+                sceneName: 'Word of the Day',
+                sceneItemId: itemID.sceneItemId 
+            })
+
+            console.log("obs connected: ", event)
+            loadScript("lib/p5.js");
+            loadScript("sketch/BouncingWaveSketch.js");
+            loadScript("sketch/BouncingWaveText.js");
+            loadScript("sketch/BouncingWaveClass.js");
+            loadScript("sketch/easing.js");    
         })
 
-        // obs.on('Identified', async () => {
-        //     console.log("obs connected: ", event)
+        obs.on("SceneItemEnableStateChanged", async function (event) {
+            itemSource = await obs.call('GetSceneItemSource', {sceneName: event.sceneName, sceneItemId: event.sceneItemId })
+            // obs.call('GetSceneItemSource', {sceneName: event.sceneName, sceneItemId: event.sceneItemId }).then(data => {
+            //   console.log("Item source", data);
+            // }); 
+            console.log("state changed",event);
+            console.log("item ", itemSource);
+            //console.log("state changed",itemSource.sourceName);
+            switch(itemSource.sourceName){
+            case 'cursor':
+                break;
+            case 'Show WotD':
+                if(event.sceneItemEnabled && itemLock.sceneItemLocked){              
+                await obs.call("SetSceneItemEnabled", {
+                    sceneName: "Word of the Day",
+                    sceneItemId: itemID.sceneItemId,
+                    sceneItemEnabled: true
+                }).then(setTimeout(async () => {
+                    obs.call("SetSceneItemEnabled", {
+                        sceneName: "Word of the Day",
+                        sceneItemId: itemID.sceneItemId,
+                        sceneItemEnabled: false
+                    })
+                }, 5000)
+                );
+                }
+                break;
+            case 'Change Camera':
+                console.log("change camera", event.sceneItemEnabled);
+                break;
+            default:
+                break;
+            }
+        })
 
-        //     await getWotD();
-            
-        // })
+        obs.on("SceneItemLockStateChanged", async function (event) { 
+            console.log("state changed",event);
+            if(event.sceneName === "Word of the Day" && event.sceneItemId == itemID.sceneItemId){
+                itemLock.sceneItemLocked = event.sceneItemLocked;
+            }
+        })
 
         // async function getWotD() {
         //     const WotD = await obs.call("GetInputSettings", {
@@ -98,18 +156,7 @@
         // });
 
         window.addEventListener(`showWord`, async function  (event) {
-            await obs.call("SetSceneItemEnabled", {
-                    sceneName: "Word",
-                    sceneItemId: 2,
-                    sceneItemEnabled: true
-                }).then(setTimeout(async () => {
-                    obs.call("SetSceneItemEnabled", {
-                        sceneName: "Word",
-                        sceneItemId: 2,
-                        sceneItemEnabled: false
-                    })
-                }, 5000)
-                );
+            
 		})
 
         function loadScript(script, module) {
